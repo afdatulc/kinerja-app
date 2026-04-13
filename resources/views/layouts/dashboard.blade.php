@@ -237,6 +237,14 @@
                     </a>
                 </li>
 
+                <li class="nav-item list-unstyled">
+                    <a href="{{ route('output-master.index') }}"
+                        class="nav-link {{ request()->routeIs('output-master.*') ? 'active' : '' }}">
+                        <i class="fas fa-box-archive me-2"></i>
+                        {{ auth()->user()->isAdmin() ? 'Master Output' : 'Output Saya' }}
+                    </a>
+                </li>
+
                 @if(auth()->user()->isAdmin())
                     <li class="nav-item list-unstyled">
                         <a href="{{ route('pegawai.index') }}"
@@ -476,7 +484,7 @@
                 "timeOut": "3000"
             };
 
-            $('select').select2({
+            $('.select2').select2({
                 theme: 'bootstrap-5',
                 width: '100%'
             });

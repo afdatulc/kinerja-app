@@ -55,7 +55,8 @@ class RealisasiController extends Controller
             'target' => $targetVal,
             'previous_value' => $previousRealisasi ? $previousRealisasi->realisasi_kumulatif : 0,
             'current_value' => $currentRealisasi ? $currentRealisasi->realisasi_kumulatif : null,
-            'aktivitas' => $aktivitasFormatted
+            'aktivitas' => $aktivitasFormatted,
+            'outputs' => $indikator->outputMasters
         ]);
     }
 
@@ -87,7 +88,7 @@ class RealisasiController extends Controller
         $oldValue = $realisasi ? $realisasi->realisasi_kumulatif : null;
 
         $realisasi = Realisasi::updateOrCreate(
-            ['indikator_id', $validated['indikator_id'], 'triwulan' => $validated['triwulan']],
+            ['indikator_id' => $validated['indikator_id'], 'triwulan' => $validated['triwulan']],
             ['realisasi_kumulatif' => $validated['realisasi_kumulatif']]
         );
 

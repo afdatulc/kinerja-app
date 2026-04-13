@@ -42,6 +42,8 @@
                             <th width="100">Kode</th>
                             <th>Sasaran & Indikator Kinerja</th>
                             <th width="120">Jenis / Periode</th>
+                            <th width="80" class="text-center">Kegiatan</th>
+                            <th width="100" class="text-center">Output</th>
                             <th width="100">Satuan</th>
                             <th width="100">Target</th>
                             <th width="150">PIC</th>
@@ -62,6 +64,20 @@
                                     <span
                                         class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2 mb-1">{{ $i->jenis_indikator }}</span>
                                     <div class="extra-small text-muted ps-1">{{ $i->periode }} ({{ $i->tahun }})</div>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info-subtle rounded-pill px-2">
+                                        {{ $i->kegiatan_masters_count }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    @php
+                                        $progress = $i->output_progress;
+                                        $isDone = $progress !== '-' && explode('/', $progress)[0] === explode('/', $progress)[1];
+                                    @endphp
+                                    <span class="badge bg-{{ $isDone ? 'success' : 'secondary' }} bg-opacity-10 text-{{ $isDone ? 'success' : 'secondary' }} border border-{{ $isDone ? 'success' : 'secondary' }}-subtle rounded-pill px-2">
+                                        {{ $progress }}
+                                    </span>
                                 </td>
                                 <td><span class="badge bg-light text-dark border fw-normal">{{ $i->satuan }}</span></td>
                                 <td class="fw-bold text-primary">{{ $i->target_tahunan }}</td>

@@ -9,7 +9,7 @@
             @csrf
             <div class="mb-3">
                 <label class="form-label fw-bold">Pilih Indikator (IKU/Proksi)</label>
-                <select name="indikator_id" class="form-select" required>
+                <select name="indikator_id" class="form-select select2" required>
                     <option value="">-- Pilih Indikator --</option>
                     @foreach($indikators as $i)
                         <option value="{{ $i->id }}">{{ $i->kode }} -- {{ $i->indikator_kinerja }}</option>

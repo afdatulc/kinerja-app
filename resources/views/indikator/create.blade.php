@@ -61,7 +61,7 @@
                         </div>
                         <div class="col-md-12 mb-3">
                             <label class="form-label fw-bold">Penanggung Jawab (PIC)</label>
-                            <select name="pic_id" class="form-select">
+                            <select name="pic_id" class="form-select select2">
                                 <option value="">-- Pilih Pegawai --</option>
                                 @foreach($pegawais as $p)
                                     <option value="{{ $p->id }}" {{ old('pic_id') == $p->id ? 'selected' : '' }}>

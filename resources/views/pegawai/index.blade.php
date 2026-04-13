@@ -54,7 +54,7 @@
                             @endif
                         </td>
                         <td>
-                            <div class="small fw-bold text-dark"><i class="fas fa-phone me-1 text-muted"></i>{{ $p->no_hp ?: '-' }}</div>
+                            <div class="small fw-bold text-dark"><a href="https://wa.me/62{{ $p->no_hp }}" target="_blank"><i class="fas fa-phone me-1 text-muted"></i>{{ $p->no_hp ?: '-' }}</a></div>
                         </td>
                         <td>
                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2 mb-1">{{ $p->seksi }}</span>

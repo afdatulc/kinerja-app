@@ -12,7 +12,14 @@ class IndikatorController extends Controller
 {
     public function index()
     {
-        $query = Indikator::with('pic');
+        $query = Indikator::with('pic')
+            ->withCount([
+                'kegiatanMasters',
+                'outputMasters',
+                'outputMasters as completed_outputs_count' => function ($q) {
+                    $q->where('is_achieved', true);
+                }
+            ]);
         
         if (!auth()->user()->isAdmin()) {
             $query->where('pic_id', auth()->user()->pegawai_id);

@@ -10,7 +10,7 @@
             <div class="row">
                 <div class="col-md-8 mb-3">
                     <label class="form-label fw-bold">Pilih Indikator</label>
-                    <select name="indikator_id" class="form-select" required>
+                    <select name="indikator_id" class="form-select select2" required>
                         @foreach($indikators as $i)
                         <option value="{{ $i->id }}" {{ old('indikator_id') == $i->id ? 'selected' : '' }}>{{ $i->indikator_kinerja }}</option>
                         @endforeach

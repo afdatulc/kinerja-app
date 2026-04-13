@@ -33,6 +33,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('kegiatan-master/import', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'import'])->name('kegiatan-master.import');
     Route::get('kegiatan-master/template', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'downloadTemplate'])->name('kegiatan-master.template');
     
+    Route::post('output-master/{output_master}/toggle-status', [\App\Http\Controllers\Admin\OutputMasterController::class, 'toggleStatus'])->name('output-master.toggle-status');
+    Route::post('output-master/{output_master}/upload', [\App\Http\Controllers\Admin\OutputMasterController::class, 'uploadFile'])->name('output-master.upload');
+    Route::resource('output-master', \App\Http\Controllers\Admin\OutputMasterController::class);
+    
     Route::get('target', [TargetController::class, 'index'])->name('target.index');
     Route::get('target/{id}', [TargetController::class, 'show'])->name('target.show');
     Route::put('target/{id}', [TargetController::class, 'update'])->name('target.update');

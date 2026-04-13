@@ -48,6 +48,11 @@ class Indikator extends Model
         return $this->hasMany(KegiatanMaster::class);
     }
 
+    public function outputMasters()
+    {
+        return $this->hasMany(OutputMaster::class);
+    }
+
     public function analisis()
     {
         return $this->hasMany(Analisis::class);
@@ -67,4 +72,15 @@ class Indikator extends Model
         if ($capaian >= 80) return 'warning';
         return 'danger';
     }
+
+    public function getOutputProgressAttribute()
+    {
+        $total = $this->output_masters_count ?? $this->outputMasters()->count();
+        $completed = $this->completed_outputs_count ?? $this->outputMasters()->where('is_achieved', true)->count();
+
+        if ($total == 0) return "-";
+        
+        return "{$completed}/{$total}";
+    }
+
 }

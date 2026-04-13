@@ -68,11 +68,22 @@
                         @enderror
                     </div>
 
+
+
                     <button type="submit" class="btn btn-primary w-100 py-2">
                         <i class="fas fa-save me-1"></i> Simpan Realisasi
                     </button>
                     <a href="{{ route('rekap.capaian') }}" class="btn btn-link w-100 text-muted mt-2">Batal</a>
                 </form>
+            </div>
+        </div>
+
+        <div id="outputMonitoringSection" class="card shadow-sm border-0 mt-4 d-none">
+            <div class="card-body">
+                <h6 class="text-muted small fw-bold text-uppercase mb-3">Output</h6>
+                <div id="outputContainer" class="bg-light p-3 rounded-4 border">
+                    <!-- Output checkboxes will be injected here -->
+                </div>
             </div>
         </div>
     </div>
@@ -95,6 +106,12 @@
         </div>
     </div>
 </div>
+
+    </div>
+</div>
+
+<!-- Hidden input for output file upload -->
+<input type="file" id="outputFileInput" style="display: none;" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">
 
 <!-- Modal Preview -->
 <div class="modal fade" id="modalPreview" tabindex="-1">
@@ -189,8 +206,111 @@
                 });
             }
             $('#activityContainer').html(html);
+
+            // Handle Outputs
+            if (data.outputs && data.outputs.length > 0) {
+                $('#outputMonitoringSection').removeClass('d-none');
+                let outputHtml = '';
+                data.outputs.forEach(o => {
+                    const hasFile = o.file_path != null;
+                    outputHtml += `
+                        <div class="mb-3 pb-3 border-bottom last-child-no-border">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input output-checkbox" type="checkbox" 
+                                    id="output-${o.id}" data-id="${o.id}" ${o.is_achieved ? 'checked' : ''}>
+                                <label class="form-check-label text-dark fw-bold small" for="output-${o.id}">
+                                    ${o.nama_output} <span class="text-muted extra-small fw-normal">(${o.jenis_output})</span>
+                                </label>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 ps-4">
+                                <button type="button" class="btn btn-sm btn-outline-secondary border-dashed upload-trigger" data-id="${o.id}">
+                                    <i class="fas ${hasFile ? 'fa-sync' : 'fa-upload'} me-1"></i> 
+                                    ${hasFile ? 'Perbarui Dokumen' : 'Upload Dokumen'}
+                                </button>
+                                
+                                <span class="text-muted extra-small">
+                                    <span id="file-info-${o.id}">
+                                        ${hasFile ? 
+                                            `<a href="javascript:void(0)" onclick="showPreview('{{ asset('storage') }}/${o.file_path}', '${o.file_path.split('/').pop()}')" class="text-primary text-decoration-none fw-bold">
+                                                <i class="fas fa-eye me-1"></i> Lihat Dokumen
+                                            </a>` : 
+                                            '<i class="fas fa-info-circle me-1"></i> Belum ada file'
+                                        }
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    `;
+                });
+                $('#outputContainer').html(outputHtml);
+            } else {
+                $('#outputMonitoringSection').addClass('d-none');
+            }
         });
     }
+
+    $(document).on('change', '.output-checkbox', function() {
+        const id = $(this).data('id');
+        const checked = $(this).is(':checked');
+        
+        $.ajax({
+            url: "{{ route('output-master.toggle-status', ['output_master' => '__ID__']) }}".replace('__ID__', id),
+            method: 'POST',
+            data: {
+                _token: '{{ csrf_token() }}'
+            },
+            success: function(response) {
+                toastr.success(response.message);
+            },
+            error: function() {
+                toastr.error('Gagal memperbarui status output.');
+            }
+        });
+    });
+
+    // File Upload Handling
+    let activeOutputId = null;
+    $(document).on('click', '.upload-trigger', function() {
+        activeOutputId = $(this).data('id');
+        $('#outputFileInput').click();
+    });
+
+    $('#outputFileInput').on('change', function() {
+        if (!this.files || !this.files[0] || !activeOutputId) return;
+        
+        const formData = new FormData();
+        formData.append('file', this.files[0]);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        const btn = $(`.upload-trigger[data-id="${activeOutputId}"]`);
+        const originalHtml = btn.html();
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span>');
+
+        $.ajax({
+            url: "{{ route('output-master.upload', ['output_master' => ':id']) }}".replace(':id', activeOutputId),
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                toastr.success(response.message);
+                btn.prop('disabled', false).html('<i class="fas fa-sync me-1"></i> Perbarui Dokumen');
+                
+                $(`#file-info-${activeOutputId}`).html(`
+                    <a href="javascript:void(0)" onclick="showPreview('${response.file_url}', '${response.file_name}')" class="text-primary text-decoration-none fw-bold">
+                        <i class="fas fa-eye me-1"></i> Lihat Dokumen
+                    </a>
+                `);
+            },
+            error: function(xhr) {
+                btn.prop('disabled', false).html(originalHtml);
+                toastr.error(xhr.responseJSON?.message || 'Gagal mengunggah file.');
+            },
+            complete: function() {
+                $('#outputFileInput').val('');
+            }
+        });
+    });
 
     $(document).ready(function() {
         $('#selectTriwulan').on('change', loadContext);
