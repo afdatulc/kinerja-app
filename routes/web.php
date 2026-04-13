@@ -1,0 +1,64 @@
+<?php
+
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\IndikatorController;
+use App\Http\Controllers\PegawaiController;
+use App\Http\Controllers\TargetController;
+use App\Http\Controllers\RealisasiController;
+use App\Http\Controllers\AnalisisController;
+use App\Http\Controllers\ExportController;
+use App\Http\Controllers\PublicInputController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', [PublicInputController::class, 'index'])->name('home');
+Route::get('/api/kegiatan/{indikator_id}', [PublicInputController::class, 'getKegiatan'])->name('api.kegiatan');
+Route::post('/aktivitas', [PublicInputController::class, 'storeAktivitas'])->name('public.aktivitas.store');
+Route::post('/kendala', [PublicInputController::class, 'storeKendala'])->name('public.kendala.store');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    
+    Route::resource('indikator', IndikatorController::class);
+    Route::post('indikator/import', [IndikatorController::class, 'import'])->name('indikator.import');
+    Route::get('indikator/template', [IndikatorController::class, 'downloadTemplate'])->name('indikator.template');
+    
+    Route::resource('pegawai', PegawaiController::class);
+    Route::post('pegawai/{id}/activate', [PegawaiController::class, 'activateAccount'])->name('pegawai.activate');
+    Route::post('pegawai/import', [PegawaiController::class, 'import'])->name('pegawai.import');
+    Route::get('pegawai/template', [PegawaiController::class, 'downloadTemplate'])->name('pegawai.template');
+
+    Route::resource('kegiatan-master', \App\Http\Controllers\Admin\KegiatanMasterController::class);
+    Route::post('kegiatan-master/{kegiatan_master}/sync-anggota', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'syncAnggota'])->name('kegiatan-master.sync-anggota');
+    Route::post('kegiatan-master/import', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'import'])->name('kegiatan-master.import');
+    Route::get('kegiatan-master/template', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'downloadTemplate'])->name('kegiatan-master.template');
+    
+    Route::get('target', [TargetController::class, 'index'])->name('target.index');
+    Route::get('target/{id}', [TargetController::class, 'show'])->name('target.show');
+    Route::put('target/{id}', [TargetController::class, 'update'])->name('target.update');
+    
+    Route::resource('realisasi', RealisasiController::class)->except(['show']);
+    Route::get('admin/aktivitas', [App\Http\Controllers\Admin\AktivitasController::class, 'index'])->name('admin.aktivitas.index');
+    Route::get('admin/aktivitas/{aktivitas}/edit', [App\Http\Controllers\Admin\AktivitasController::class, 'edit'])->name('admin.aktivitas.edit');
+    Route::put('admin/aktivitas/{aktivitas}', [App\Http\Controllers\Admin\AktivitasController::class, 'update'])->name('admin.aktivitas.update');
+    Route::delete('admin/aktivitas/{aktivitas}', [App\Http\Controllers\Admin\AktivitasController::class, 'destroy'])->name('admin.aktivitas.destroy');
+    
+    Route::resource('analisis', AnalisisController::class);
+    
+    Route::get('export/realisasi', [ExportController::class, 'realisasi'])->name('export.realisasi');
+    Route::get('export/indikator', [ExportController::class, 'indikator'])->name('export.indikator');
+
+    Route::get('rekap-capaian', [App\Http\Controllers\CapaianController::class, 'rekap'])->name('rekap.capaian');
+    Route::get('rekap-capaian/export', [App\Http\Controllers\CapaianController::class, 'export'])->name('rekap.capaian.export');
+    
+    Route::get('monitoring-evidence', [App\Http\Controllers\Admin\EvidenceController::class, 'index'])->name('admin.evidence.index');
+    Route::get('realisasi/entry/{indikator}', [App\Http\Controllers\RealisasiController::class, 'entry'])->name('realisasi.entry');
+    Route::get('realisasi/history/{realisasi}', [App\Http\Controllers\RealisasiController::class, 'history'])->name('realisasi.history');
+    Route::get('api/realisasi/context/{indikator}/{triwulan}', [App\Http\Controllers\RealisasiController::class, 'getContext'])->name('api.realisasi.context');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+require __DIR__.'/auth.php';

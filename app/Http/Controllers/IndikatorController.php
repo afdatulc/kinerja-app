@@ -1,0 +1,101 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Indikator;
+use App\Http\Requests\IndikatorRequest;
+use App\Imports\IndikatorImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Http\Request;
+
+class IndikatorController extends Controller
+{
+    public function index()
+    {
+        $query = Indikator::with('pic');
+        
+        if (!auth()->user()->isAdmin()) {
+            $query->where('pic_id', auth()->user()->pegawai_id);
+        }
+
+        $indikators = $query->get();
+        $pegawais = \App\Models\Pegawai::all();
+        return view('indikator.index', compact('indikators', 'pegawais'));
+    }
+
+    public function store(IndikatorRequest $request)
+    {
+        $indikator = Indikator::create($request->validated());
+        $indikator->target()->create();
+        
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Indikator berhasil ditambahkan',
+                'data' => $indikator
+            ]);
+        }
+        
+        return redirect()->route('indikator.index')->with('success', 'Indikator berhasil ditambahkan');
+    }
+
+    public function show(Indikator $indikator)
+    {
+        return response()->json($indikator);
+    }
+
+    public function update(IndikatorRequest $request, Indikator $indikator)
+    {
+        $indikator->update($request->validated());
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Indikator berhasil diperbarui',
+                'data' => $indikator
+            ]);
+        }
+
+        return redirect()->route('indikator.index')->with('success', 'Indikator berhasil diperbarui');
+    }
+
+    public function destroy(Indikator $indikator)
+    {
+        $indikator->delete();
+
+        if (request()->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Indikator berhasil dihapus'
+            ]);
+        }
+
+        return redirect()->route('indikator.index')->with('success', 'Indikator berhasil dihapus');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv'
+        ]);
+
+        Excel::import(new IndikatorImport, $request->file('file'));
+
+        return redirect()->route('indikator.index')->with('success', 'Data Indikator berhasil diimport.');
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = [
+            'kode', 'tujuan', 'sasaran', 'indikator_kinerja', 
+            'jenis_indikator', 'periode', 'tipe', 'satuan', 
+            'target_tahunan', 'tahun'
+        ];
+
+        return Excel::download(new class($headers) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $headers;
+            public function __construct($headers) { $this->headers = $headers; }
+            public function array(): array { return [$this->headers]; }
+        }, 'template_import_indikator.xlsx');
+    }
+}

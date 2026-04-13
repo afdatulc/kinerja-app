@@ -1,0 +1,37 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Pegawai extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'nip',
+        'nama',
+        'email_bps',
+        'jabatan',
+        'unit_kerja',
+        'status',
+        'seksi',
+        'no_hp',
+    ];
+
+    public function user()
+    {
+        return $this->hasOne(User::class);
+    }
+
+    public function aktivitas()
+    {
+        return $this->hasMany(Aktivitas::class, 'pegawai_nip', 'nip');
+    }
+
+    public function analisis()
+    {
+        return $this->hasMany(Analisis::class, 'pegawai_nip', 'nip');
+    }
+}
