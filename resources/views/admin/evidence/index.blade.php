@@ -39,55 +39,57 @@
     </div>
 </div>
 
-<div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4" id="evidenceGrid">
-    @forelse($evidences as $e)
-        @foreach($e->lampiran as $l)
-            @php
-                $fileName = basename($l);
-                $ext = pathinfo($l, PATHINFO_EXTENSION);
-                $url = asset('storage/' . $l);
-                $isImage = in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-            @endphp
-            <div class="col">
-                <div class="card h-100 border-0 shadow-sm evidence-card">
-                    <div class="evidence-preview-wrapper bg-light d-flex align-items-center justify-content-center" style="height: 180px; overflow: hidden; cursor: pointer;" onclick="showPreview('{{ $url }}', '{{ $fileName }}')">
-                        @if($isImage)
-                            <img src="{{ $url }}" class="img-fluid" alt="Evidence">
-                        @else
-                            <div class="text-center">
-                                <i class="fas fa-file-pdf text-danger fs-1 mb-2"></i>
-                                <div class="extra-small text-muted">{{ $ext }}</div>
+@if($evidences->count() > 0)
+    <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4" id="evidenceGrid">
+        @foreach($evidences as $e)
+            @foreach($e->lampiran as $l)
+                @php
+                    $fileName = basename($l);
+                    $ext = pathinfo($l, PATHINFO_EXTENSION);
+                    $url = asset('storage/' . $l);
+                    $isImage = in_array(strtolower($ext), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                @endphp
+                <div class="col">
+                    <div class="card h-100 border-0 shadow-sm evidence-card">
+                        <div class="evidence-preview-wrapper bg-light d-flex align-items-center justify-content-center" style="height: 180px; overflow: hidden; cursor: pointer;" onclick="showPreview('{{ $url }}', '{{ $fileName }}')">
+                            @if($isImage)
+                                <img src="{{ $url }}" class="img-fluid" alt="Evidence">
+                            @else
+                                <div class="text-center">
+                                    <i class="fas fa-file-pdf text-danger fs-1 mb-2"></i>
+                                    <div class="extra-small text-muted">{{ $ext }}</div>
+                                </div>
+                            @endif
+                            <div class="preview-overlay">
+                                <i class="fas fa-search-plus text-white fs-3"></i>
                             </div>
-                        @endif
-                        <div class="preview-overlay">
-                            <i class="fas fa-search-plus text-white fs-3"></i>
                         </div>
-                    </div>
-                    <div class="card-body p-3">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle extra-small">TW {{ $e->triwulan }}</span>
-                            <span class="extra-small text-muted">{{ $e->tanggal_mulai->format('d/m/Y') }}</span>
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle extra-small">TW {{ $e->triwulan }}</span>
+                                <span class="extra-small text-muted">{{ $e->tanggal_mulai->format('d/m/Y') }}</span>
+                            </div>
+                            <h6 class="card-title extra-small fw-bold mb-1 text-truncate" title="{{ $e->pegawai->nama ?? $e->pegawai_nip }}">
+                                {{ $e->pegawai->nama ?? $e->pegawai_nip }}
+                            </h6>
+                            <p class="card-text extra-small text-muted mb-0 lh-sm line-clamp-2">
+                                {{ $e->uraian }}
+                            </p>
                         </div>
-                        <h6 class="card-title extra-small fw-bold mb-1 text-truncate" title="{{ $e->pegawai->nama ?? $e->pegawai_nip }}">
-                            {{ $e->pegawai->nama ?? $e->pegawai_nip }}
-                        </h6>
-                        <p class="card-text extra-small text-muted mb-0 lh-sm line-clamp-2">
-                            {{ $e->uraian }}
-                        </p>
-                    </div>
-                    <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
-                        <div class="extra-small fw-bold text-primary text-truncate">{{ $e->indikator->kode }}</div>
+                        <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
+                            <div class="extra-small fw-bold text-primary text-truncate">{{ $e->indikator->kode }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endforeach
         @endforeach
-    @empty
-        <div class="col-12 text-center py-5">
-            <i class="fas fa-folder-open fs-1 text-muted mb-3 d-block"></i>
-            <p class="text-muted">Tidak ada bukti dukung yang ditemukan.</p>
-        </div>
-    @endforelse
-</div>
+    </div>
+@else
+    <div class="col-12 text-center py-5 mt-5">
+        <i class="fas fa-folder-open fs-1 text-muted mb-3 d-block" style="font-size: 4rem !important;"></i>
+        <h5 class="text-muted fw-bold">Tidak ada bukti dukung yang ditemukan.</h5>
+    </div>
+@endif
 
 <!-- Modal Preview (Reused from Entry) -->
 <div class="modal fade" id="modalPreview" tabindex="-1">

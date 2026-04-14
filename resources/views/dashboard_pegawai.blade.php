@@ -105,7 +105,12 @@
         <div class="col-12">
             <div class="alert alert-light border text-center py-5">
                 <i class="fas fa-info-circle fs-3 text-muted mb-3 d-block"></i>
-                <p class="text-muted mb-0">Anda belum ditugaskan sebagai PIC untuk indikator kinerja mana pun di tahun {{ $tahun }}.</p>
+                @if(isset($error) && $error)
+                    <p class="text-danger fw-bold mb-1">{{ $error }}</p>
+                    <p class="text-muted small">Hubungi Administrator untuk menautkan akun Anda dengan data profil pegawai.</p>
+                @else
+                    <p class="text-muted mb-0">Anda belum ditugaskan sebagai PIC untuk indikator kinerja mana pun di tahun {{ $tahun }}.</p>
+                @endif
             </div>
         </div>
     @endforelse

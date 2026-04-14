@@ -22,7 +22,14 @@ class IndikatorController extends Controller
             ]);
         
         if (!auth()->user()->isAdmin()) {
-            $query->where('pic_id', auth()->user()->pegawai_id);
+            $pegawaiId = auth()->user()->pegawai_id;
+            if ($pegawaiId) {
+                // Only show indicators assigned to this user
+                $query->where('pic_id', $pegawaiId);
+            } else {
+                // If user doesn't have a linked pegawai profile, show nothing
+                $query->whereRaw('1 = 0');
+            }
         }
 
         $indikators = $query->get();

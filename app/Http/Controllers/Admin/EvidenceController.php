@@ -30,6 +30,15 @@ class EvidenceController extends Controller
             $query->where('indikator_id', $indikator_id);
         }
 
+        if (!auth()->user()->isAdmin()) {
+            $user = auth()->user();
+            if ($user->pegawai) {
+                $query->where('pegawai_nip', $user->pegawai->nip);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        }
+
         $evidences = $query->latest()->get();
         $indikators = Indikator::where('tahun', $tahun)->get();
 

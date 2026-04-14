@@ -6,13 +6,13 @@
     <div class="card border-0 shadow-sm rounded-4 text-dark">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <div>
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->isAdmin() || $indikators->count() > 0)
                     <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" data-bs-toggle="modal"
                         data-bs-target="#modalOutput">
                         <i class="fas fa-plus me-1"></i> Tambah Output
                     </button>
                 @else
-                    <div class="fw-bold text-dark"><i class="fas fa-box-archive me-2 text-primary"></i> Daftar Output Indikator Anda</div>
+                    <div class="fw-bold text-dark"><i class="fas fa-box-archive me-2 text-primary"></i> Daftar Output Indikator Saya</div>
                 @endif
             </div>
         </div>

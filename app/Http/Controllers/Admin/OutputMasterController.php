@@ -15,21 +15,53 @@ class OutputMasterController extends Controller
         
         // Filter: Admin sees all, PIC Indikator sees outputs under their indicators
         if (!auth()->user()->isAdmin()) {
-            $query->whereHas('indikator', function($q) {
-                $q->where('pic_id', auth()->user()->pegawai_id);
-            });
+            $pegawaiId = auth()->user()->pegawai_id;
+            if ($pegawaiId) {
+                // Only show outputs linked to indicators assigned to this user
+                $query->whereHas('indikator', function($q) use ($pegawaiId) {
+                    $q->where('pic_id', $pegawaiId);
+                });
+            } else {
+                // If user doesn't have a linked pegawai profile, show nothing
+                $query->whereRaw('1 = 0');
+            }
         }
 
         $outputs = $query->get();
         $indikators = Indikator::all();
+
+        // Filter: Admin sees all, PIC Indikator sees outputs and indicators they responsible for
+        if (!auth()->user()->isAdmin()) {
+            $pegawaiId = auth()->user()->pegawai_id;
+            if ($pegawaiId) {
+                // Dropdown indicators only shows what they are PIC of
+                $indikators = Indikator::where('pic_id', $pegawaiId)->get();
+            } else {
+                $indikators = collect();
+            }
+        }
         
         return view('admin.output.index', compact('outputs', 'indikators'));
     }
 
     public function store(Request $request)
     {
+        $pegawaiId = auth()->user()->pegawai_id;
+        $isAdmin = auth()->user()->isAdmin();
+
         $validated = $request->validate([
-            'indikator_id' => 'required|exists:indikators,id',
+            'indikator_id' => [
+                'required',
+                'exists:indikators,id',
+                function ($attribute, $value, $fail) use ($isAdmin, $pegawaiId) {
+                    if (!$isAdmin) {
+                        $indikator = Indikator::find($value);
+                        if (!$indikator || $indikator->pic_id != $pegawaiId) {
+                            $fail('Anda hanya diperbolehkan menambah output pada indikator di mana Anda adalah PIC.');
+                        }
+                    }
+                },
+            ],
             'nama_output' => 'required|string',
             'jenis_output' => 'required|in:Laporan,Publikasi',
             'periode' => 'required|in:Tahunan,Triwulanan,Bulanan',
@@ -64,8 +96,22 @@ class OutputMasterController extends Controller
 
     public function update(Request $request, OutputMaster $outputMaster)
     {
+        $pegawaiId = auth()->user()->pegawai_id;
+        $isAdmin = auth()->user()->isAdmin();
+
         $validated = $request->validate([
-            'indikator_id' => 'required|exists:indikators,id',
+            'indikator_id' => [
+                'required',
+                'exists:indikators,id',
+                function ($attribute, $value, $fail) use ($isAdmin, $pegawaiId) {
+                    if (!$isAdmin) {
+                        $indikator = Indikator::find($value);
+                        if (!$indikator || $indikator->pic_id != $pegawaiId) {
+                            $fail('Anda hanya diperbolehkan memperbarui output pada indikator di mana Anda adalah PIC.');
+                        }
+                    }
+                },
+            ],
             'nama_output' => 'required|string',
             'jenis_output' => 'required|in:Laporan,Publikasi',
             'periode' => 'required|in:Tahunan,Triwulanan,Bulanan',

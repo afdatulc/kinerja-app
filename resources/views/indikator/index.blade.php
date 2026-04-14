@@ -91,17 +91,17 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-1">
-                                        <a href="{{ route('realisasi.entry', $i->id) }}"
+                                        <a href="{{ route('realisasi.entry', $i) }}"
                                             class="btn btn-sm btn-outline-success rounded-3" title="Input Progress">
                                             <i class="fas fa-chart-line"></i>
                                         </a>
                                         @if(auth()->user()->isAdmin())
                                             <button class="btn btn-sm btn-outline-primary rounded-3 edit-indikator"
-                                                data-id="{{ $i->id }}" title="Edit">
+                                                data-id="{{ $i->id }}" data-kode="{{ $i->kode }}" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-sm btn-outline-danger rounded-3 delete-indikator"
-                                                data-id="{{ $i->id }}" title="Hapus">
+                                                data-id="{{ $i->id }}" data-kode="{{ $i->kode }}" title="Hapus">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         @endif
@@ -245,12 +245,14 @@
             // Edit Button Click (Event Delegation)
             $(document).on('click', '.edit-indikator', function () {
                 const id = $(this).data('id');
+                const kode = $(this).data('kode');
                 $('#modalTitle').text('Edit Indikator Kinerja');
                 $('#formMethod').val('PUT');
                 $('#indikator_id').val(id);
+                $('#formIndikator').data('kode', kode); // Store kode for update URL
                 $('#modalIndikator').modal('show');
 
-                $.get(`{{ url('indikator') }}/${id}`, function (data) {
+                $.get(`{{ url('indikator') }}/${kode}`, function (data) {
                     $('#kode').val(data.kode);
                     $('#tujuan').val(data.tujuan);
                     $('#sasaran').val(data.sasaran);
@@ -269,8 +271,9 @@
             $('#formIndikator').on('submit', function (e) {
                 e.preventDefault();
                 const id = $('#indikator_id').val();
+                const kode = $(this).data('kode');
                 const method = $('#formMethod').val();
-                const url = method === 'POST' ? "{{ route('indikator.store') }}" : `{{ url('indikator') }}/${id}`;
+                const url = method === 'POST' ? "{{ route('indikator.store') }}" : `{{ url('indikator') }}/${kode}`;
                 const btn = $('#btnSimpan');
 
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
@@ -339,10 +342,11 @@
             $(document).on('click', '.delete-indikator', function () {
                 if (!confirm('Hapus indikator ini?')) return;
                 const id = $(this).data('id');
+                const kode = $(this).data('kode');
                 const row = $(`#row-${id}`);
 
                 $.ajax({
-                    url: `{{ url('indikator') }}/${id}`,
+                    url: `{{ url('indikator') }}/${kode}`,
                     method: 'POST',
                     data: {
                         _token: "{{ csrf_token() }}",

@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class Indikator extends Model
 {
     use HasFactory;
+    
+    public function getRouteKeyName()
+    {
+        return 'kode';
+    }
 
     protected $fillable = [
         'kode',

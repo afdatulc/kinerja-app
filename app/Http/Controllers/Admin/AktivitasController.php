@@ -17,7 +17,12 @@ class AktivitasController extends Controller
         
         // Role based filtering
         if ($user->isPegawai()) {
-            $query->where('pegawai_nip', $user->pegawai->nip);
+            if ($user->pegawai) {
+                $query->where('pegawai_nip', $user->pegawai->nip);
+            } else {
+                // If pegawai profile is missing, don't show any activities
+                $query->whereRaw('1 = 0');
+            }
         }
 
         if ($triwulan) {
@@ -32,8 +37,11 @@ class AktivitasController extends Controller
     public function edit(Aktivitas $aktivitas)
     {
         // Auth check
-        if (auth()->user()->isPegawai() && $aktivitas->pegawai_nip !== auth()->user()->pegawai->nip) {
-            abort(403);
+        if (auth()->user()->isPegawai()) {
+            $pegawai = auth()->user()->pegawai;
+            if (!$pegawai || $aktivitas->pegawai_nip !== $pegawai->nip) {
+                abort(403);
+            }
         }
 
         return view('admin.aktivitas.edit', compact('aktivitas'));
@@ -42,8 +50,11 @@ class AktivitasController extends Controller
     public function update(Request $request, Aktivitas $aktivitas)
     {
         // Auth check
-        if (auth()->user()->isPegawai() && $aktivitas->pegawai_nip !== auth()->user()->pegawai->nip) {
-            abort(403);
+        if (auth()->user()->isPegawai()) {
+            $pegawai = auth()->user()->pegawai;
+            if (!$pegawai || $aktivitas->pegawai_nip !== $pegawai->nip) {
+                abort(403);
+            }
         }
 
         $request->validate([

@@ -233,7 +233,7 @@
                     <a href="{{ route('kegiatan-master.index') }}"
                         class="nav-link {{ request()->routeIs('kegiatan-master.*') ? 'active' : '' }}">
                         <i class="fas fa-tasks me-2"></i>
-                        {{ auth()->user()->isAdmin() ? 'Master Kegiatan' : 'Kegiatan & Tim' }}
+                        {{ auth()->user()->isAdmin() ? 'Master Kegiatan' : 'Kegiatan Saya' }}
                     </a>
                 </li>
 

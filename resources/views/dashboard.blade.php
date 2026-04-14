@@ -132,13 +132,14 @@
         const ctx = document.getElementById('capaianChart').getContext('2d');
         const statusCtx = document.getElementById('statusChart').getContext('2d');
 
-        const labels = {!! json_encode($indikators->pluck('indikator_kinerja')) !!};
+        const codes = {!! json_encode($indikators->pluck('kode')) !!};
+        const fullLabels = {!! json_encode($indikators->pluck('indikator_kinerja')) !!};
         const dataCapaian = {!! json_encode($indikators->pluck('capaian_tahunan')) !!};
 
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: labels.map(l => l.length > 20 ? l.substring(0, 20) + '...' : l),
+                labels: codes,
                 datasets: [{
                     label: 'Capaian (%)',
                     data: dataCapaian,
@@ -149,8 +150,33 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: function(context) {
+                                return fullLabels[context[0].dataIndex];
+                            },
+                            label: function(context) {
+                                return 'Capaian: ' + context.parsed.y + '%';
+                            }
+                        }
+                    }
+                },
                 scales: {
-                    y: { beginAtZero: true, max: 120 }
+                    y: { 
+                        beginAtZero: true, 
+                        max: 120,
+                        title: { display: true, text: 'Capaian (%)' }
+                    },
+                    x: {
+                        title: { display: true, text: 'Kode Indikator' },
+                        ticks: {
+                            autoSkip: false,
+                            maxRotation: 45,
+                            minRotation: 45
+                        }
+                    }
                 }
             }
         });

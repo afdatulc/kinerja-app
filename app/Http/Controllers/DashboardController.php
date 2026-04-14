@@ -26,21 +26,18 @@ class DashboardController extends Controller
         } else {
             // Pegawai View
             $pegawai = $user->pegawai;
-            if (!$pegawai) {
-                return view('dashboard', [
-                    'indikators' => collect(),
-                    'summary' => ['total' => 0, 'hijau' => 0, 'kuning' => 0, 'merah' => 0],
-                    'tahun' => $tahun,
-                    'error' => 'Data pegawai tidak ditemukan untuk user ini.'
-                ]);
+            
+            $myActivitiesCount = 0;
+            $myIndicators = collect();
+            
+            if ($pegawai) {
+                $myActivitiesCount = \App\Models\Aktivitas::where('pegawai_nip', $pegawai->nip)->count();
+                $myIndicators = Indikator::where('pic_id', $pegawai->id)
+                    ->where('tahun', $tahun)
+                    ->with(['target', 'realisasis'])
+                    ->get();
             }
 
-            $myActivitiesCount = \App\Models\Aktivitas::where('pegawai_nip', $pegawai->nip)->count();
-            $myIndicators = Indikator::where('pic_id', $pegawai->id)
-                ->where('tahun', $tahun)
-                ->with(['target', 'realisasis'])
-                ->get();
-            
             $summary = [
                 'personal_activities' => $myActivitiesCount,
                 'total_pic' => $myIndicators->count(),
@@ -52,7 +49,8 @@ class DashboardController extends Controller
                 'indikators' => $myIndicators,
                 'summary' => $summary,
                 'tahun' => $tahun,
-                'pegawai' => $pegawai
+                'pegawai' => $pegawai,
+                'error' => !$pegawai ? 'Data profil pegawai Anda belum ditautkan oleh Admin.' : null
             ]);
         }
     }

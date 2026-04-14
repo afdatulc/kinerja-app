@@ -6,15 +6,17 @@
     <div class="card border-0 shadow-sm rounded-4 text-dark">
         <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
             <div>
-                @if(auth()->user()->isAdmin())
+                @if(auth()->user()->isAdmin() || $indikators->count() > 0)
                     <button type="button" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold" data-bs-toggle="modal"
                         data-bs-target="#modalKegiatan">
                         <i class="fas fa-plus me-1"></i> Tambah Kegiatan
                     </button>
-                    <a href="{{ route('kegiatan-master.template') }}"
-                        class="btn btn-outline-success rounded-pill px-3 ms-2 fw-bold">
-                        <i class="fas fa-download me-1"></i> Template
-                    </a>
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('kegiatan-master.template') }}"
+                            class="btn btn-outline-success rounded-pill px-3 ms-2 fw-bold">
+                            <i class="fas fa-download me-1"></i> Template
+                        </a>
+                    @endif
                 @else
                     <div class="fw-bold text-dark"><i class="fas fa-tasks me-2 text-primary"></i> Daftar Kegiatan & Tim Anda
                     </div>
@@ -81,10 +83,12 @@
                                                 data-id="{{ $k->id }}" title="Edit">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-sm btn-outline-danger rounded-3 delete-kegiatan"
-                                                data-id="{{ $k->id }}" title="Hapus">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            @if(auth()->user()->isAdmin())
+                                                <button class="btn btn-sm btn-outline-danger rounded-3 delete-kegiatan"
+                                                    data-id="{{ $k->id }}" title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            @endif
                                         @endif
                                     </div>
                                 </td>
@@ -114,7 +118,6 @@
                             <select name="indikator_id" id="indikator_id"
                                 class="form-select rounded-3 shadow-none border-light-subtle" required>
                                 <option value="">-- Pilih Indikator --</option>
-                                @php $indikators = \App\Models\Indikator::all(); @endphp
                                 @foreach($indikators as $i)
                                     <option value="{{ $i->id }}">{{ $i->kode }} - {{ $i->indikator_kinerja }}</option>
                                 @endforeach

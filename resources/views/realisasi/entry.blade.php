@@ -168,7 +168,7 @@
         
         $('#activityContainer').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>');
 
-        $.get(`{{ url('api/realisasi/context/' . $indikator->id) }}/${triwulan}`, function(data) {
+        $.get(`{{ url('api/realisasi/context/' . $indikator->kode) }}/${triwulan}`, function(data) {
             $('#targetValue').text(data.target);
             $('#prevValue').text(data.previous_value);
             $('#inputRealisasi').val(data.current_value);

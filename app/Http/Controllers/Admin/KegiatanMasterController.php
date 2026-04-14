@@ -15,19 +15,31 @@ class KegiatanMasterController extends Controller
     {
         $query = KegiatanMaster::with(['indikator', 'ketuaTim', 'anggotas']);
         
-        // Filter: Admin sees all, PIC Indikator sees activities under their indicators
+        $indikators = Indikator::all();
+        $pegawais = \App\Models\Pegawai::all();
+
+        // Filter: Admin sees all, PIC Indikator sees activities under their indicators or where they are ketua tim
         if (!auth()->user()->isAdmin()) {
-            $query->whereHas('indikator', function($q) {
-                $q->where('pic_id', auth()->user()->pegawai_id);
-            })->orWhere('ketua_tim_id', auth()->user()->pegawai_id)
-              ->orWhereHas('anggotas', function($q) {
-                  $q->where('pegawai_id', auth()->user()->pegawai_id);
-              });
+            $pegawaiId = auth()->user()->pegawai_id;
+            if ($pegawaiId) {
+                // Show activities where user is either the PIC of the parent indicator OR the Ketua Tim
+                $query->where(function($q) use ($pegawaiId) {
+                    $q->where('ketua_tim_id', $pegawaiId)
+                      ->orWhereHas('indikator', function($sq) use ($pegawaiId) {
+                          $sq->where('pic_id', $pegawaiId);
+                      });
+                });
+                
+                // Also filter the indicators dropdown for adding new kegiatans
+                $indikators = Indikator::where('pic_id', $pegawaiId)->get();
+            } else {
+                // If user doesn't have a linked pegawai profile, show nothing
+                $query->whereRaw('1 = 0');
+                $indikators = collect();
+            }
         }
 
         $kegiatans = $query->get();
-        $indikators = Indikator::all();
-        $pegawais = \App\Models\Pegawai::all();
         
         return view('admin.kegiatan.index', compact('kegiatans', 'indikators', 'pegawais'));
     }
@@ -40,8 +52,22 @@ class KegiatanMasterController extends Controller
 
     public function store(Request $request)
     {
+        $pegawaiId = auth()->user()->pegawai_id;
+        $isAdmin = auth()->user()->isAdmin();
+
         $validated = $request->validate([
-            'indikator_id' => 'required|exists:indikators,id',
+            'indikator_id' => [
+                'required',
+                'exists:indikators,id',
+                function ($attribute, $value, $fail) use ($isAdmin, $pegawaiId) {
+                    if (!$isAdmin) {
+                        $indikator = Indikator::find($value);
+                        if (!$indikator || $indikator->pic_id != $pegawaiId) {
+                            $fail('Anda hanya diperbolehkan menambah kegiatan pada indikator di mana Anda adalah PIC.');
+                        }
+                    }
+                },
+            ],
             'nama_kegiatan' => 'required|string',
             'tahapan' => 'required|array',
         ]);
@@ -71,8 +97,22 @@ class KegiatanMasterController extends Controller
 
     public function update(Request $request, KegiatanMaster $kegiatanMaster)
     {
+        $pegawaiId = auth()->user()->pegawai_id;
+        $isAdmin = auth()->user()->isAdmin();
+
         $validated = $request->validate([
-            'indikator_id' => 'required|exists:indikators,id',
+            'indikator_id' => [
+                'required',
+                'exists:indikators,id',
+                function ($attribute, $value, $fail) use ($isAdmin, $pegawaiId) {
+                    if (!$isAdmin) {
+                        $indikator = Indikator::find($value);
+                        if (!$indikator || $indikator->pic_id != $pegawaiId) {
+                            $fail('Anda hanya diperbolehkan memperbarui kegiatan pada indikator di mana Anda adalah PIC.');
+                        }
+                    }
+                },
+            ],
             'nama_kegiatan' => 'required|string',
             'tahapan' => 'required|array',
         ]);
