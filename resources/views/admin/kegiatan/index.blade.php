@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Master Kegiatan')
+@section('title', auth()->user()->isAdmin() ? 'Master Kegiatan' : 'Daftar Tanggung Jawab Kegiatan')
 
 @section('content')
     <div class="card border-0 shadow-sm rounded-4 text-dark">
@@ -18,7 +18,7 @@
                         </a>
                     @endif
                 @else
-                    <div class="fw-bold text-dark"><i class="fas fa-tasks me-2 text-primary"></i> Daftar Kegiatan & Tim Anda
+                    <div class="fw-bold text-dark"><i class="fas fa-tasks me-2 text-primary"></i> Daftar Tanggung Jawab Kegiatan & Tim Anda
                     </div>
                 @endif
             </div>

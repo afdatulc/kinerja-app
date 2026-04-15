@@ -75,8 +75,9 @@
 
                     <div class="mb-3">
                         <label class="form-label text-muted small fw-bold">DASAR HITUNG & BASIS DATA REALISASI</label>
-                        <textarea name="dasar_hitung" class="form-control rounded-3" rows="3">{{ old('dasar_hitung', $indikator->dasar_hitung) }}</textarea>
+                        <textarea name="dasar_hitung" class="form-control rounded-3 tinymce-editor" rows="3">{{ old('dasar_hitung', $indikator->dasar_hitung) }}</textarea>
                     </div>
+
                     
                     <div class="mt-4 pt-3 border-top">
                         <button type="submit" class="btn btn-primary">Update Indikator</button>
@@ -88,3 +89,12 @@
     </div>
 </div>
 @endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function() {
+        window.initTinyMCE('.tinymce-editor');
+    });
+</script>
+@endsection
+

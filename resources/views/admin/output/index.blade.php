@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', auth()->user()->isAdmin() ? 'Master Output' : 'Master Output & PIC')
+@section('title', auth()->user()->isAdmin() ? 'Master Output' : 'Daftar Tanggung Jawab Output')
 
 @section('content')
     <div class="card border-0 shadow-sm rounded-4 text-dark">
@@ -11,10 +11,29 @@
                         data-bs-target="#modalOutput">
                         <i class="fas fa-plus me-1"></i> Tambah Output
                     </button>
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('output-master.template') }}"
+                            class="btn btn-outline-success rounded-pill px-3 ms-2 fw-bold">
+                            <i class="fas fa-download me-1"></i> Template
+                        </a>
+                    @endif
                 @else
-                    <div class="fw-bold text-dark"><i class="fas fa-box-archive me-2 text-primary"></i> Daftar Output Indikator Saya</div>
+                    <div class="fw-bold text-dark"><i class="fas fa-box-archive me-2 text-primary"></i> Daftar Tanggung Jawab Output</div>
                 @endif
             </div>
+            @if(auth()->user()->isAdmin())
+                <form action="{{ route('output-master.import') }}" method="POST" enctype="multipart/form-data"
+                    class="d-flex align-items-center">
+                    @csrf
+                    <div class="input-group input-group-sm">
+                        <input type="file" name="file" class="form-control rounded-start-pill border-success"
+                            style="width: 150px;" required>
+                        <button type="submit" class="btn btn-success rounded-end-pill px-3">
+                            <i class="fas fa-upload me-1"></i> Import
+                        </button>
+                    </div>
+                </form>
+            @endif
         </div>
         <div class="card-body">
             <div class="table-responsive">

@@ -19,9 +19,10 @@ Route::post('/kendala', [PublicInputController::class, 'storeKendala'])->name('p
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    Route::resource('indikator', IndikatorController::class);
     Route::post('indikator/import', [IndikatorController::class, 'import'])->name('indikator.import');
     Route::get('indikator/template', [IndikatorController::class, 'downloadTemplate'])->name('indikator.template');
+    Route::resource('indikator', IndikatorController::class);
+    Route::post('indikator/{indikator}/tautan', [IndikatorController::class, 'updateTautan'])->name('indikator.tautan');
     
     Route::resource('pegawai', PegawaiController::class);
     Route::post('pegawai/{id}/activate', [PegawaiController::class, 'activateAccount'])->name('pegawai.activate');
@@ -33,6 +34,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('kegiatan-master/import', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'import'])->name('kegiatan-master.import');
     Route::get('kegiatan-master/template', [\App\Http\Controllers\Admin\KegiatanMasterController::class, 'downloadTemplate'])->name('kegiatan-master.template');
     
+    Route::post('output-master/import', [\App\Http\Controllers\Admin\OutputMasterController::class, 'import'])->name('output-master.import');
+    Route::get('output-master/template', [\App\Http\Controllers\Admin\OutputMasterController::class, 'downloadTemplate'])->name('output-master.template');
     Route::post('output-master/{output_master}/toggle-status', [\App\Http\Controllers\Admin\OutputMasterController::class, 'toggleStatus'])->name('output-master.toggle-status');
     Route::post('output-master/{output_master}/upload', [\App\Http\Controllers\Admin\OutputMasterController::class, 'uploadFile'])->name('output-master.upload');
     Route::resource('output-master', \App\Http\Controllers\Admin\OutputMasterController::class);

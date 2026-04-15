@@ -12,6 +12,8 @@
 
     <!-- CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -25,6 +27,7 @@
             --secondary-color: #3f37c9;
             --bg-dark: #1a1c23;
             --sidebar-width: 260px;
+            --sidebar-collapsed-width: 78px;
         }
 
         body {
@@ -32,6 +35,7 @@
             background-color: #f8f9fa;
         }
 
+        /* ===== SIDEBAR ===== */
         #sidebar {
             width: var(--sidebar-width);
             height: 100vh;
@@ -41,17 +45,19 @@
             background: var(--bg-dark);
             color: #fff;
             z-index: 1000;
-            transition: all 0.3s;
+            transition: width 0.3s cubic-bezier(.4, 0, .2, 1);
+            overflow-x: hidden;
             overflow-y: auto;
             -ms-overflow-style: none;
-            /* IE and Edge */
             scrollbar-width: none;
-            /* Firefox */
         }
 
         #sidebar::-webkit-scrollbar {
             display: none;
-            /* Chrome, Safari and Opera */
+        }
+
+        #sidebar.collapsed {
+            width: var(--sidebar-collapsed-width);
         }
 
         #content {
@@ -61,35 +67,145 @@
             display: flex;
             flex-direction: column;
             background-color: #f0f2f5;
+            transition: margin-left 0.3s cubic-bezier(.4, 0, .2, 1);
+        }
+
+        #sidebar.collapsed~#content {
+            margin-left: var(--sidebar-collapsed-width);
         }
 
         .main-content {
             flex: 1;
         }
 
+        /* Sidebar Header */
+        .sidebar-header {
+            padding: 1.5rem 1.2rem;
+            font-weight: 800;
+            font-size: 1.4rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            letter-spacing: -0.5px;
+            white-space: nowrap;
+            justify-content: space-between;
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: inherit;
+            overflow: hidden;
+        }
+
+        .sidebar-brand .brand-text {
+            transition: opacity 0.2s, width 0.3s;
+            opacity: 1;
+        }
+
+        #sidebar.collapsed .sidebar-brand .brand-text {
+            opacity: 0;
+            width: 0;
+            overflow: hidden;
+        }
+
+        /* Hamburger Toggle */
+        .sidebar-toggle {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 0.4rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .sidebar-toggle:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        #sidebar.collapsed .sidebar-toggle {
+            margin: 0 auto;
+        }
+
+        /* Section Labels */
+        .sidebar-section-label {
+            padding: 0.5rem 1.5rem 0.3rem;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.25);
+            white-space: nowrap;
+            overflow: hidden;
+            transition: opacity 0.2s;
+        }
+
+        #sidebar.collapsed .sidebar-section-label {
+            opacity: 0;
+            height: 0;
+            padding: 0;
+            margin: 0;
+        }
+
+        /* Nav Links */
         .nav-link {
             color: rgba(255, 255, 255, 0.6);
-            padding: 0.8rem 1.2rem;
+            padding: 0.75rem 1.2rem;
             display: flex;
             align-items: center;
             border-radius: 10px;
-            margin: 0.2rem 1rem;
+            margin: 0.15rem 0.8rem;
             transition: all 0.2s ease;
-            font-size: 0.9rem;
+            font-size: 0.88rem;
             font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            position: relative;
         }
 
         .nav-link i {
-            width: 24px;
-            font-size: 1.1rem;
+            width: 22px;
+            min-width: 22px;
+            font-size: 1.05rem;
             margin-right: 12px;
+            text-align: center;
             transition: transform 0.2s;
+        }
+
+        .nav-link .link-text {
+            transition: opacity 0.2s;
+            opacity: 1;
+        }
+
+        #sidebar.collapsed .nav-link .link-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        #sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 0.75rem;
+            margin: 0.15rem 0.6rem;
+        }
+
+        #sidebar.collapsed .nav-link i {
+            margin-right: 0;
+            font-size: 1.15rem;
         }
 
         .nav-link:hover {
             color: #fff;
             background: rgba(255, 255, 255, 0.05);
-            transform: translateX(5px);
+            transform: translateX(3px);
+        }
+
+        #sidebar.collapsed .nav-link:hover {
+            transform: none;
         }
 
         .nav-link:hover i {
@@ -102,16 +218,45 @@
             box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
         }
 
-        .sidebar-header {
-            padding: 2.5rem 1.5rem;
-            font-weight: 800;
-            font-size: 1.4rem;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            letter-spacing: -0.5px;
+        /* Tooltip for collapsed sidebar */
+        #sidebar.collapsed .nav-link {
+            position: relative;
         }
 
+        #sidebar.collapsed .nav-link::after {
+            content: attr(data-title);
+            position: absolute;
+            left: calc(100% + 14px);
+            top: 50%;
+            transform: translateY(-50%);
+            background: #2b2d42;
+            color: #fff;
+            padding: 0.4rem 0.9rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s;
+            z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+        }
+
+        #sidebar.collapsed .nav-link:hover::after {
+            opacity: 1;
+        }
+
+        /* Sidebar Divider */
+        .sidebar-divider {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            margin: 0.6rem 1.2rem;
+        }
+
+        #sidebar.collapsed .sidebar-divider {
+            margin: 0.6rem 0.6rem;
+        }
+
+        /* ===== GENERAL ===== */
         .card {
             border: none;
             border-radius: 16px;
@@ -198,6 +343,85 @@
             color: #adb5bd;
             font-weight: 500;
         }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            #sidebar {
+                width: var(--sidebar-collapsed-width);
+            }
+
+            #sidebar .sidebar-brand .brand-text {
+                opacity: 0;
+                width: 0;
+                overflow: hidden;
+            }
+
+            #sidebar .nav-link .link-text {
+                opacity: 0;
+                width: 0;
+            }
+
+            #sidebar .nav-link {
+                justify-content: center;
+                padding: 0.75rem;
+                margin: 0.15rem 0.6rem;
+            }
+
+            #sidebar .nav-link i {
+                margin-right: 0;
+                font-size: 1.15rem;
+            }
+
+            #sidebar .sidebar-section-label {
+                opacity: 0;
+                height: 0;
+                padding: 0;
+                margin: 0;
+            }
+
+            #sidebar .sidebar-divider {
+                margin: 0.6rem 0.6rem;
+            }
+
+            #content {
+                margin-left: var(--sidebar-collapsed-width);
+            }
+
+            #sidebar.expanded {
+                width: var(--sidebar-width);
+            }
+
+            #sidebar.expanded .sidebar-brand .brand-text {
+                opacity: 1;
+                width: auto;
+            }
+
+            #sidebar.expanded .nav-link .link-text {
+                opacity: 1;
+                width: auto;
+            }
+
+            #sidebar.expanded .nav-link {
+                justify-content: flex-start;
+                padding: 0.75rem 1.2rem;
+                margin: 0.15rem 0.8rem;
+            }
+
+            #sidebar.expanded .nav-link i {
+                margin-right: 12px;
+                font-size: 1.05rem;
+            }
+
+            #sidebar.expanded .sidebar-section-label {
+                opacity: 1;
+                height: auto;
+                padding: 0.5rem 1.5rem 0.3rem;
+            }
+
+            #sidebar.expanded .sidebar-divider {
+                margin: 0.6rem 1.2rem;
+            }
+        }
     </style>
     @yield('styles')
 </head>
@@ -206,89 +430,91 @@
 
     <div id="sidebar" class="d-flex flex-column">
         <div class="sidebar-header">
-            <a href="/" class="text-decoration-none color-inherit"><i class="fas fa-chart-line me-2 text-primary"></i>
-                Kinerja-App</a>
+            <a href="/" class="sidebar-brand">
+                <i class="fas fa-chart-line me-2 text-primary" style="font-size:1.3rem;"></i>
+                <span class="brand-text">Kinerja-App</span>
+            </a>
+            <button class="sidebar-toggle" id="sidebarToggle" title="Toggle Sidebar">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
 
         <div class="flex-grow-1">
             <nav class="mt-4">
                 <a href="{{ route('dashboard') }}"
-                    class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                    <i class="fas fa-home"></i> Dashboard
+                    class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" data-title="Dashboard">
+                    <i class="fas fa-gauge-high"></i> <span class="link-text">Dashboard</span>
                 </a>
 
-                @if(auth()->user()->isAdmin())
+                @if (auth()->user()->isAdmin())
                     <a href="{{ route('indikator.index') }}"
-                        class="nav-link {{ request()->routeIs('indikator.*') ? 'active' : '' }}">
-                        <i class="fas fa-list-check"></i> Indikator
+                        class="nav-link {{ request()->routeIs('indikator.*') ? 'active' : '' }}" data-title="Indikator">
+                        <i class="fas fa-chart-bar"></i> <span class="link-text">Indikator</span>
                     </a>
                 @else
                     <a href="{{ route('indikator.index') }}"
-                        class="nav-link {{ request()->routeIs('indikator.*') ? 'active' : '' }}">
-                        <i class="fas fa-list-check"></i> Indikator Saya
+                        class="nav-link {{ request()->routeIs('indikator.*') ? 'active' : '' }}"
+                        data-title="Indikator Saya">
+                        <i class="fas fa-chart-bar"></i> <span class="link-text">Indikator Saya</span>
                     </a>
                 @endif
 
-                <li class="nav-item list-unstyled">
-                    <a href="{{ route('kegiatan-master.index') }}"
-                        class="nav-link {{ request()->routeIs('kegiatan-master.*') ? 'active' : '' }}">
-                        <i class="fas fa-tasks me-2"></i>
-                        {{ auth()->user()->isAdmin() ? 'Master Kegiatan' : 'Kegiatan Saya' }}
-                    </a>
-                </li>
+                <a href="{{ route('kegiatan-master.index') }}"
+                    class="nav-link {{ request()->routeIs('kegiatan-master.*') ? 'active' : '' }}"
+                    data-title="{{ auth()->user()->isAdmin() ? 'Master Kegiatan' : 'Kegiatan Saya' }}">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span
+                        class="link-text">{{ auth()->user()->isAdmin() ? 'Master Kegiatan' : 'Kegiatan Saya' }}</span>
+                </a>
 
-                <li class="nav-item list-unstyled">
-                    <a href="{{ route('output-master.index') }}"
-                        class="nav-link {{ request()->routeIs('output-master.*') ? 'active' : '' }}">
-                        <i class="fas fa-box-archive me-2"></i>
-                        {{ auth()->user()->isAdmin() ? 'Master Output' : 'Output Saya' }}
-                    </a>
-                </li>
+                <a href="{{ route('output-master.index') }}"
+                    class="nav-link {{ request()->routeIs('output-master.*') ? 'active' : '' }}"
+                    data-title="{{ auth()->user()->isAdmin() ? 'Master Output' : 'Output Saya' }}">
+                    <i class="fas fa-cubes"></i>
+                    <span class="link-text">{{ auth()->user()->isAdmin() ? 'Master Output' : 'Output Saya' }}</span>
+                </a>
 
-                @if(auth()->user()->isAdmin())
-                    <li class="nav-item list-unstyled">
-                        <a href="{{ route('pegawai.index') }}"
-                            class="nav-link {{ request()->routeIs('pegawai.*') ? 'active' : '' }}">
-                            <i class="fas fa-user-friends me-2"></i> Master Pegawai
-                        </a>
-                    </li>
+                @if (auth()->user()->isAdmin())
+                    <a href="{{ route('pegawai.index') }}"
+                        class="nav-link {{ request()->routeIs('pegawai.*') ? 'active' : '' }}"
+                        data-title="Master Pegawai">
+                        <i class="fas fa-users-gear"></i> <span class="link-text">Master Pegawai</span>
+                    </a>
                     <a href="{{ route('target.index') }}"
-                        class="nav-link {{ request()->routeIs('target.*') ? 'active' : '' }}">
-                        <i class="fas fa-bullseye"></i> Target
+                        class="nav-link {{ request()->routeIs('target.*') ? 'active' : '' }}" data-title="Target">
+                        <i class="fas fa-bullseye"></i> <span class="link-text">Target</span>
                     </a>
                     <a href="{{ route('analisis.index') }}"
-                        class="nav-link {{ request()->routeIs('analisis.*') ? 'active' : '' }}">
-                        <i class="fas fa-magnifying-glass-chart"></i> Analisis & Kendala
+                        class="nav-link {{ request()->routeIs('analisis.*') ? 'active' : '' }}"
+                        data-title="Analisis & Kendala">
+                        <i class="fas fa-magnifying-glass-chart"></i> <span class="link-text">Analisis & Kendala</span>
                     </a>
                 @endif
 
                 <a href="{{ route('admin.evidence.index') }}"
-                    class="nav-link {{ request()->routeIs('admin.evidence.*') ? 'active' : '' }}">
-                    <i class="fas fa-images"></i> Galeri Bukti Dukung
+                    class="nav-link {{ request()->routeIs('admin.evidence.*') ? 'active' : '' }}"
+                    data-title="Galeri Bukti Dukung">
+                    <i class="fas fa-photo-film"></i> <span class="link-text">Galeri Bukti Dukung</span>
                 </a>
 
                 <a href="{{ route('admin.aktivitas.index') }}"
-                    class="nav-link {{ request()->routeIs('admin.aktivitas.*') ? 'active' : '' }}">
-                    <i class="fas fa-tasks"></i>
-                    {{ auth()->user()->isAdmin() ? 'Aktivitas Seluruh' : 'Riwayat Aktivitas Saya' }}
+                    class="nav-link {{ request()->routeIs('admin.aktivitas.*') ? 'active' : '' }}"
+                    data-title="{{ auth()->user()->isAdmin() ? 'Aktivitas Seluruh' : 'Riwayat Aktivitas' }}">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    <span
+                        class="link-text">{{ auth()->user()->isAdmin() ? 'Aktivitas Seluruh' : 'Riwayat Aktivitas Saya' }}</span>
                 </a>
 
                 <a href="{{ route('rekap.capaian') }}"
-                    class="nav-link {{ request()->routeIs('rekap.capaian') ? 'active' : '' }}">
-                    <i class="fas fa-file-invoice"></i> Rekap Capaian Kinerja
+                    class="nav-link {{ request()->routeIs('rekap.capaian') ? 'active' : '' }}"
+                    data-title="Rekap Capaian">
+                    <i class="fas fa-trophy"></i> <span class="link-text">Rekap Capaian Kinerja</span>
                 </a>
 
                 <a href="{{ route('notulen.index') }}"
-                    class="nav-link {{ request()->routeIs('notulen.*') ? 'active' : '' }}">
-                    <i class="fas fa-file-signature"></i> Buat Notulen
+                    class="nav-link {{ request()->routeIs('notulen.*') ? 'active' : '' }}" data-title="Buat Notulen">
+                    <i class="fas fa-file-pen"></i> <span class="link-text">Buat Notulen</span>
                 </a>
-
-                <!-- <div class="mt-3 px-3">
-                    <hr style="opacity: 0.1;">
-                    <a href="/explorer-master/public" class="nav-link" style="color: #60a5fa !important;">
-                        <i class="fas fa-briefcase"></i> Kelola Tugas (Explorer)
-                    </a>
-                </div> -->
             </nav>
         </div>
     </div>
@@ -337,7 +563,7 @@
             </div>
         </div>
 
-        @if(session('success'))
+        @if (session('success'))
             <div
                 class="alert alert-success border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center p-3 animate__animated animate__fadeIn">
                 <i class="fas fa-check-circle me-2 fs-5"></i>
@@ -345,7 +571,7 @@
             </div>
         @endif
 
-        @if(session('error'))
+        @if (session('error'))
             <div
                 class="alert alert-danger border-0 shadow-sm rounded-4 mb-4 d-flex align-items-center p-3 animate__animated animate__fadeIn">
                 <i class="fas fa-exclamation-circle me-2 fs-5"></i>
@@ -359,7 +585,8 @@
 
         <footer class="text-center pt-5">
             <hr class="opacity-10 mb-4">
-            &copy; {{ date('Y') }} <span class="text-primary fw-bold">Kinerja-App</span> - Monitoring Kinerja Terpadu
+            &copy; {{ date('Y') }} <span class="text-primary fw-bold">Kinerja-App</span> - Monitoring Kinerja
+            Terpadu
         </footer>
     </div>
 
@@ -451,7 +678,11 @@
         </div>
     </div>
 
+    <!-- TinyMCE Rich Text Editor -->
+    <script src="https://cdn.jsdelivr.net/npm/tinymce@7/tinymce.min.js" referrerpolicy="origin"></script>
+
     <!-- JS -->
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
@@ -460,18 +691,18 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
             // DataTables Language ID
             window.DATATABLES_ID = {
                 "sEmptyTable": "Tidak ada data yang tersedia pada tabel ini",
                 "sProcessing": "Sedang memproses...",
                 "sLengthMenu": "Tampilkan _MENU_ entri",
                 "sZeroRecords": "Tidak ditemukan data yang sesuai",
+                "sSearch": "Cari:",
                 "sInfo": "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
                 "sInfoEmpty": "Menampilkan 0 sampai 0 dari 0 entri",
                 "sInfoFiltered": "(disaring dari _MAX_ entri keseluruhan)",
                 "sInfoPostFix": "",
-                "sSearch": "Cari:",
                 "sUrl": "",
                 "oPaginate": {
                     "sFirst": "Pertama",
@@ -495,29 +726,31 @@
             });
 
             // Update Profile AJAX
-            $('#formProfile').on('submit', function (e) {
+            $('#formProfile').on('submit', function(e) {
                 e.preventDefault();
                 const btn = $('#btnUpdateProfile');
-                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
+                btn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
 
                 $.ajax({
                     url: "{{ route('profile.update') }}",
                     method: 'POST',
                     data: $(this).serialize(),
-                    success: function (response) {
+                    success: function(response) {
                         toastr.success(response.message);
                         $('#modalProfile').modal('hide');
                         btn.prop('disabled', false).text('Simpan Perubahan');
 
                         // Digital Update UI
                         $('#profile_display_name').text(response.user.name);
-                        $('div.fw-bold.text-dark.small').text(response.user.name); // update header
+                        $('div.fw-bold.text-dark.small').text(response.user
+                            .name); // update header
 
                         // Clear password fields
                         $('input[name="password"]').val('');
                         $('input[name="password_confirmation"]').val('');
                     },
-                    error: function (xhr) {
+                    error: function(xhr) {
                         btn.prop('disabled', false).text('Simpan Perubahan');
                         const errors = xhr.responseJSON.errors;
                         if (errors) {
@@ -528,8 +761,94 @@
                     }
                 });
             });
+            // TinyMCE Global Initialization
+            window.initTinyMCE = function(selector) {
+                tinymce.init({
+                    selector: selector,
+                    height: 350,
+                    menubar: false,
+                    plugins: 'lists charmap visualblocks code fullscreen help wordcount advlist',
+                    toolbar: 'undo redo | blocks fontsize | bold italic underline strikethrough | forecolor backcolor | superscript subscript | alignleft aligncenter alignright alignjustify | bullist numlist | charmap formula | removeformat | fullscreen',
+                    toolbar_mode: 'sliding',
+                    content_style: 'body { font-family:Outfit,Helvetica,Arial,sans-serif; font-size:14px }',
+
+
+                    setup: function(editor) {
+                        editor.ui.registry.addButton('formula', {
+                            text: 'Formula',
+                            icon: 'character-count',
+                            onAction: function() {
+                                editor.windowManager.open({
+                                    title: 'Insert LaTeX Formula',
+                                    body: {
+                                        type: 'panel',
+                                        items: [{
+                                            type: 'textarea',
+                                            name: 'latex',
+                                            label: 'LaTeX Syntax (e.g. \\frac{n}{N} \\times 100%)'
+                                        }]
+                                    },
+                                    buttons: [{
+                                            type: 'cancel',
+                                            text: 'Close'
+                                        },
+                                        {
+                                            type: 'submit',
+                                            text: 'Insert',
+                                            primary: true
+                                        }
+                                    ],
+                                    onSubmit: function(api) {
+                                        const data = api.getData();
+                                        editor.insertContent('\\(' + data
+                                            .latex + '\\)');
+                                        api.close();
+                                    }
+                                });
+                            }
+                        });
+                        editor.on('change', function() {
+                            editor.save();
+                        });
+                    }
+                });
+            };
+
+            // Fix TinyMCE focus problem in Bootstrap Modal (for TinyMCE 7)
+            document.addEventListener('focusin', (e) => {
+                if (e.target.closest(
+                        ".tox-tinymce, .tox-tinymce-aux, .moxman-window, .tam-assetmanager-root"
+                        ) !== null) {
+                    e.stopImmediatePropagation();
+                }
+            });
+
+        });
+
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const SIDEBAR_KEY = 'sidebar_collapsed';
+
+        // Restore sidebar state from localStorage
+        if (localStorage.getItem(SIDEBAR_KEY) === 'true') {
+            sidebar.classList.add('collapsed');
+            toggleBtn.querySelector('i').classList.replace('fa-bars', 'fa-bars-staggered');
+        }
+
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem(SIDEBAR_KEY, isCollapsed);
+            const icon = this.querySelector('i');
+            if (isCollapsed) {
+                icon.classList.replace('fa-bars', 'fa-bars-staggered');
+            } else {
+                icon.classList.replace('fa-bars-staggered', 'fa-bars');
+            }
         });
     </script>
+
     @yield('scripts')
 </body>
 

@@ -69,8 +69,33 @@ class IndikatorController extends Controller
                 'data' => $indikator
             ]);
         }
-
         return redirect()->route('indikator.index')->with('success', 'Indikator berhasil diperbarui');
+    }
+
+    public function updateTautan(Request $request, Indikator $indikator)
+    {
+        $validated = $request->validate([
+            'dasar_hitung' => 'nullable|string',
+            'link_bukti_kinerja' => 'nullable|string',
+            'link_bukti_tindak_lanjut' => 'nullable|string',
+            'penjelasan_lainnya' => 'nullable|string',
+        ]);
+
+        // Convert empty strings to null for URL fields
+        $validated['link_bukti_kinerja'] = !empty($validated['link_bukti_kinerja']) ? $validated['link_bukti_kinerja'] : null;
+        $validated['link_bukti_tindak_lanjut'] = !empty($validated['link_bukti_tindak_lanjut']) ? $validated['link_bukti_tindak_lanjut'] : null;
+
+        $indikator->update($validated);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Dasar Hitung & Tautan berhasil diperbarui',
+                'data' => $indikator
+            ]);
+        }
+
+        return redirect()->route('indikator.index')->with('success', 'Dasar Hitung & Tautan berhasil diperbarui');
     }
 
     public function destroy(Indikator $indikator)

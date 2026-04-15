@@ -34,6 +34,9 @@ class IndikatorRequest extends FormRequest
             'tahun' => 'required|integer',
             'pic_id' => 'nullable|exists:pegawais,id',
             'dasar_hitung' => 'nullable|string',
+            'link_bukti_kinerja' => 'nullable|url',
+            'link_bukti_tindak_lanjut' => 'nullable|url',
+            'penjelasan_lainnya'=> 'nullable|string',
         ];
     }
 }

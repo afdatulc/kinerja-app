@@ -1,6 +1,6 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Master Indikator')
+@section('title', auth()->user()->isAdmin() ? 'Master Indikator' : 'Daftar Tanggung Jawab Indikator Kinerja')
 
 @section('content')
     <div class="card border-0 shadow-sm rounded-4 text-dark">
@@ -96,6 +96,10 @@
                                             <i class="fas fa-chart-line"></i>
                                         </a>
                                         @if(auth()->user()->isAdmin())
+                                            <button class="btn btn-sm btn-outline-info rounded-3 edit-tautan"
+                                                data-id="{{ $i->id }}" data-kode="{{ $i->kode }}" title="Tautan & Basis Data">
+                                                <i class="fas fa-link"></i>
+                                            </button>
                                             <button class="btn btn-sm btn-outline-primary rounded-3 edit-indikator"
                                                 data-id="{{ $i->id }}" data-kode="{{ $i->kode }}" title="Edit">
                                                 <i class="fas fa-edit"></i>
@@ -213,19 +217,59 @@
                                     @endforeach
                                 </select>
                             </div>
-
-                            <div class="col-12">
-                                <label class="form-label fw-bold small">Dasar Hitung & Basis Data Realisasi</label>
-                                <textarea name="dasar_hitung" id="dasar_hitung"
-                                    class="form-control rounded-3 shadow-none border-light-subtle" rows="2"
-                                    placeholder="Jelaskan dasar perhitungan dan basis data yang digunakan..."></textarea>
-                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 pt-0">
                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
                         <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpan">Simpan
                             Indikator</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Tautan & Basis Data -->
+    <div class="modal fade" id="modalTautan" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Tautan & Basis Data Realisasi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formTautan">
+                    @csrf
+                    <input type="hidden" id="tautan_kode">
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label fw-bold small">Dasar Hitung & Basis Data Realisasi IKU</label>
+                                <textarea name="dasar_hitung" id="tautan_dasar_hitung"
+                                    class="form-control rounded-3 shadow-none border-light-subtle tinymce-editor" rows="3"
+                                    placeholder="Jelaskan dasar perhitungan dan basis data yang digunakan..."></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small">Tautan Bukti Dukung Kinerja</label>
+                                <input type="url" name="link_bukti_kinerja" id="link_bukti_kinerja"
+                                    class="form-control rounded-3 shadow-none border-light-subtle"
+                                    placeholder="https://...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small">Tautan Bukti Dukung Rencana Tindak Lanjut Triwulan Sebelumnya</label>
+                                <input type="url" name="link_bukti_tindak_lanjut" id="link_bukti_tindak_lanjut"
+                                    class="form-control rounded-3 shadow-none border-light-subtle"
+                                    placeholder="https://...">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label fw-bold small">Penjelasan atau Pembahasan Lainnya</label>
+                                <textarea name="penjelasan_lainnya" id="penjelasan_lainnya"
+                                    class="form-control rounded-3 shadow-none border-light-subtle" rows="3"
+                                    placeholder="Tambahkan penjelasan lainnya jika ada..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpanTautan">Simpan </button>
                     </div>
                 </form>
             </div>
@@ -248,7 +292,21 @@
                 $('#indikator_id').val('');
                 $('#pic_id').val('').trigger('change');
             });
+            
+            // Tautan Modal Reset
+            $('#modalTautan').on('hidden.bs.modal', function () {
+                $('#formTautan')[0].reset();
+                $('#tautan_kode').val('');
+                tinymce.get('tautan_dasar_hitung')?.setContent('');
+                // Reset plain textarea penjelasan_lainnya
+                $('#penjelasan_lainnya').val('');
+            });
 
+            $('#modalTautan').on('shown.bs.modal', function () {
+                if (!tinymce.get('tautan_dasar_hitung')) {
+                    window.initTinyMCE('#tautan_dasar_hitung');
+                }
+            });
             // Edit Button Click (Event Delegation)
             $(document).on('click', '.edit-indikator', function () {
                 const id = $(this).data('id');
@@ -271,9 +329,24 @@
                     $('#target_tahunan').val(data.target_tahunan);
                     $('#tahun').val(data.tahun);
                     $('#pic_id').val(data.pic_id).trigger('change');
-                    $('#dasar_hitung').val(data.dasar_hitung);
                 });
             });
+
+            // Tautan Edit Click
+            $(document).on('click', '.edit-tautan', function () {
+                const kode = $(this).data('kode');
+                $('#tautan_kode').val(kode);
+                $('#modalTautan').modal('show');
+
+                $.get(`{{ url('indikator') }}/${kode}`, function (data) {
+                    $('#tautan_dasar_hitung').val(data.dasar_hitung || '');
+                    tinymce.get('tautan_dasar_hitung')?.setContent(data.dasar_hitung || '');
+                    $('#link_bukti_kinerja').val(data.link_bukti_kinerja || '');
+                    $('#link_bukti_tindak_lanjut').val(data.link_bukti_tindak_lanjut || '');
+                    $('#penjelasan_lainnya').val(data.penjelasan_lainnya || '');
+                });
+            });
+
 
             // Form Submit (AJAX)
             $('#formIndikator').on('submit', function (e) {
@@ -337,6 +410,48 @@
                     error: function (xhr) {
                         btn.prop('disabled', false).html('Simpan Indikator');
                         const errors = xhr.responseJSON.errors;
+                        if (errors) {
+                            Object.values(errors).forEach(err => toastr.error(err[0]));
+                        } else {
+                            toastr.error('Terjadi kesalahan saat menyimpan data.');
+                        }
+                    }
+                });
+            });
+
+            // Tautan Submit
+            $('#formTautan').on('submit', function (e) {
+                e.preventDefault();
+                const kode = $('#tautan_kode').val();
+                if (!kode) return;
+                const btn = $('#btnSimpanTautan');
+
+                // Sync TinyMCE content to textarea before serializing
+                tinymce.triggerSave();
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
+
+                // Build data manually to ensure all fields are included
+                const formData = {
+                    _token: "{{ csrf_token() }}",
+                    _method: 'POST',
+                    dasar_hitung: tinymce.get('tautan_dasar_hitung') ? tinymce.get('tautan_dasar_hitung').getContent() : $('#tautan_dasar_hitung').val(),
+                    link_bukti_kinerja: $('#link_bukti_kinerja').val(),
+                    link_bukti_tindak_lanjut: $('#link_bukti_tindak_lanjut').val(),
+                    penjelasan_lainnya: $('#penjelasan_lainnya').val(),
+                };
+
+                $.ajax({
+                    url: `{{ url('indikator') }}/${kode}/tautan`,
+                    method: 'POST',
+                    data: formData,
+                    success: function (response) {
+                        toastr.success(response.message);
+                        $('#modalTautan').modal('hide');
+                        btn.prop('disabled', false).html('Simpan');
+                    },
+                    error: function (xhr) {
+                        btn.prop('disabled', false).html('Simpan');
+                        const errors = xhr.responseJSON?.errors;
                         if (errors) {
                             Object.values(errors).forEach(err => toastr.error(err[0]));
                         } else {

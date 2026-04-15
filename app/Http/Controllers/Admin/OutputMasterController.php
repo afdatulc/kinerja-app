@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\OutputMaster;
 use App\Models\Indikator;
+use App\Imports\OutputMasterImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 
 class OutputMasterController extends Controller
@@ -195,5 +197,30 @@ class OutputMasterController extends Controller
         }
 
         return response()->json(['status' => 'error', 'message' => 'No file uploaded'], 400);
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        Excel::import(new OutputMasterImport, $request->file('file'));
+        return redirect()->route('output-master.index')->with('success', 'Data Master Output berhasil diimport.');
+    }
+
+    public function downloadTemplate()
+    {
+        $headers = ['kode_indikator', 'nama_output', 'jenis_output', 'periode'];
+        $example = ['1.1.1.1', 'Laporan Analisis Data Ketenagakerjaan', 'Laporan', 'Triwulanan'];
+        
+        return Excel::download(new class($headers, $example) implements \Maatwebsite\Excel\Concerns\FromArray {
+            protected $headers;
+            protected $example;
+            public function __construct($headers, $example) { 
+                $this->headers = $headers; 
+                $this->example = $example; 
+            }
+            public function array(): array { 
+                return [$this->headers, $this->example]; 
+            }
+        }, 'template_import_output.xlsx');
     }
 }

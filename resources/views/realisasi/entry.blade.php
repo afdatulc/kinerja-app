@@ -235,7 +235,7 @@
                             <div class="d-flex align-items-center gap-2 ps-4">
                                 <button type="button" class="btn btn-sm btn-outline-secondary border-dashed upload-trigger" data-id="${o.id}">
                                     <i class="fas ${hasFile ? 'fa-sync' : 'fa-upload'} me-1"></i> 
-                                    ${hasFile ? 'Perbarui' : 'Upload'}
+                                    ${hasFile ? 'Perbarui' : 'Unggah'}
                                 </button>
                                 
                                 <span class="text-muted extra-small">
@@ -244,7 +244,7 @@
                                             `<a href="javascript:void(0)" onclick="showPreview('{{ asset('storage') }}/${o.file_path}', '${o.file_path.split('/').pop()}')" class="text-primary text-decoration-none fw-bold">
                                                 <i class="fas fa-eye me-1"></i> Lihat
                                             </a>` : 
-                                            '<i class="fas fa-info-circle me-1"></i> No file'
+                                            '<i class="fas fa-info-circle me-1"></i> Tidak ada file'
                                         }
                                     </span>
                                 </span>
