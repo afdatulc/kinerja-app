@@ -213,6 +213,13 @@
                                     @endforeach
                                 </select>
                             </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-bold small">Dasar Hitung & Basis Data Realisasi</label>
+                                <textarea name="dasar_hitung" id="dasar_hitung"
+                                    class="form-control rounded-3 shadow-none border-light-subtle" rows="2"
+                                    placeholder="Jelaskan dasar perhitungan dan basis data yang digunakan..."></textarea>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer border-0 pt-0">
@@ -264,6 +271,7 @@
                     $('#target_tahunan').val(data.target_tahunan);
                     $('#tahun').val(data.tahun);
                     $('#pic_id').val(data.pic_id).trigger('change');
+                    $('#dasar_hitung').val(data.dasar_hitung);
                 });
             });
 

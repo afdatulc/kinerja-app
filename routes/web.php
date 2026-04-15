@@ -60,6 +60,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('realisasi/history/{realisasi}', [App\Http\Controllers\RealisasiController::class, 'history'])->name('realisasi.history');
     Route::get('api/realisasi/context/{indikator}/{triwulan}', [App\Http\Controllers\RealisasiController::class, 'getContext'])->name('api.realisasi.context');
 
+    Route::get('notulen', [\App\Http\Controllers\NotulenController::class, 'index'])->name('notulen.index');
+    Route::post('notulen/download', [\App\Http\Controllers\NotulenController::class, 'download'])->name('notulen.download');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

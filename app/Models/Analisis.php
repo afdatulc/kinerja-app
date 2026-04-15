@@ -15,14 +15,18 @@ class Analisis extends Model
         'indikator_id',
         'pegawai_nip',
         'triwulan',
+        'narasi_analisis',
         'kendala',
         'solusi',
         'rencana_tindak_lanjut',
+        'penjelasan_lainnya',
         'pic_tindak_lanjut',
         'batas_waktu',
         'severity',
         'link_bukti_kinerja',
+        'link_bukti_tindak_lanjut',
         'file_bukti_kinerja',
+        'file_bukti_tindak_lanjut',
     ];
 
     public function indikator()

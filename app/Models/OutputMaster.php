@@ -22,4 +22,9 @@ class OutputMaster extends Model
     {
         return $this->belongsTo(Indikator::class);
     }
+
+    public function outputRealisasis()
+    {
+        return $this->hasMany(OutputRealisasi::class);
+    }
 }

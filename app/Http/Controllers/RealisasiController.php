@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Indikator;
 use App\Models\Realisasi;
+use App\Models\OutputRealisasi;
 use App\Http\Requests\RealisasiRequest;
 use Illuminate\Http\Request;
 
@@ -51,12 +52,27 @@ class RealisasiController extends Controller
             ];
         });
 
+        $outputs = $indikator->outputMasters()->with(['outputRealisasis' => function($q) use ($triwulan) {
+            $q->where('triwulan', $triwulan);
+        }])->get();
+
         return response()->json([
             'target' => $targetVal,
             'previous_value' => $previousRealisasi ? $previousRealisasi->realisasi_kumulatif : 0,
             'current_value' => $currentRealisasi ? $currentRealisasi->realisasi_kumulatif : null,
             'aktivitas' => $aktivitasFormatted,
-            'outputs' => $indikator->outputMasters
+            'outputs' => $outputs->map(function($o) {
+                $realisasi = $o->outputRealisasis->first();
+                return [
+                    'id' => $o->id,
+                    'nama_output' => $o->nama_output,
+                    'jenis_output' => $o->jenis_output,
+                    'is_achieved' => $o->is_achieved,
+                    'file_path' => $o->file_path,
+                    'volume' => $realisasi ? $realisasi->volume : null,
+                    'progres' => $realisasi ? $realisasi->progres : null,
+                ];
+            })
         ]);
     }
 
@@ -66,11 +82,17 @@ class RealisasiController extends Controller
             'indikator_id' => 'required|exists:indikators,id',
             'triwulan' => 'required|integer|between:1,4',
             'realisasi_kumulatif' => 'required|numeric',
+            'output_data' => 'nullable|array',
+            'output_data.*.volume' => 'nullable|numeric',
+            'output_data.*.progres' => 'nullable|numeric|between:0,100',
         ]);
 
+        $indikatorId = $validated['indikator_id'];
+        $tw = $validated['triwulan'];
+
         // Validation TW > Previous TW
-        $previous = Realisasi::where('indikator_id', $validated['indikator_id'])
-            ->where('triwulan', '<', $validated['triwulan'])
+        $previous = Realisasi::where('indikator_id', $indikatorId)
+            ->where('triwulan', '<', $tw)
             ->orderBy('triwulan', 'desc')
             ->first();
 
@@ -80,17 +102,27 @@ class RealisasiController extends Controller
             ])->withInput();
         }
 
-        $realisasi = Realisasi::where('indikator_id', $validated['indikator_id'])
-            ->where('triwulan', $validated['triwulan'])
+        $realisasi = Realisasi::where('indikator_id', $indikatorId)
+            ->where('triwulan', $tw)
             ->first();
 
         $action = $realisasi ? 'updated' : 'created';
         $oldValue = $realisasi ? $realisasi->realisasi_kumulatif : null;
 
         $realisasi = Realisasi::updateOrCreate(
-            ['indikator_id' => $validated['indikator_id'], 'triwulan' => $validated['triwulan']],
+            ['indikator_id' => $indikatorId, 'triwulan' => $tw],
             ['realisasi_kumulatif' => $validated['realisasi_kumulatif']]
         );
+
+        // Save Output Realisasis
+        if ($request->has('output_data')) {
+            foreach ($request->output_data as $outputId => $data) {
+                \App\Models\OutputRealisasi::updateOrCreate(
+                    ['output_master_id' => $outputId, 'triwulan' => $tw],
+                    ['volume' => $data['volume'] ?? 0, 'progres' => $data['progres'] ?? 0]
+                );
+            }
+        }
 
         // Record Log
         if ($oldValue != $validated['realisasi_kumulatif']) {

@@ -25,9 +25,11 @@ class AnalisisRequest extends FormRequest
         return [
             'indikator_id' => 'required|exists:indikators,id',
             'triwulan' => 'required|integer|min:1|max:4',
+            'narasi_analisis' => 'nullable',
             'kendala' => 'nullable',
             'solusi' => 'nullable',
             'rencana_tindak_lanjut' => 'nullable',
+            'penjelasan_lainnya' => 'nullable',
             'pic_tindak_lanjut' => 'nullable',
             'batas_waktu' => 'nullable|date',
             'link_bukti_kinerja' => 'nullable|url',

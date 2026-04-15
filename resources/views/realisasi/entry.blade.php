@@ -68,22 +68,18 @@
                         @enderror
                     </div>
 
-
+                    <div id="outputMonitoringSection" class="mb-4 d-none">
+                        <h6 class="text-muted small fw-bold text-uppercase mb-3">Rincian Output (Volume & Progres)</h6>
+                        <div id="outputContainer" class="bg-light p-3 rounded-4 border">
+                            <!-- Output inputs will be injected here -->
+                        </div>
+                    </div>
 
                     <button type="submit" class="btn btn-primary w-100 py-2">
-                        <i class="fas fa-save me-1"></i> Simpan Realisasi
+                        <i class="fas fa-save me-1"></i> Simpan Realisasi & Output
                     </button>
                     <a href="{{ route('rekap.capaian') }}" class="btn btn-link w-100 text-muted mt-2">Batal</a>
                 </form>
-            </div>
-        </div>
-
-        <div id="outputMonitoringSection" class="card shadow-sm border-0 mt-4 d-none">
-            <div class="card-body">
-                <h6 class="text-muted small fw-bold text-uppercase mb-3">Output</h6>
-                <div id="outputContainer" class="bg-light p-3 rounded-4 border">
-                    <!-- Output checkboxes will be injected here -->
-                </div>
             </div>
         </div>
     </div>
@@ -222,19 +218,33 @@
                                     ${o.nama_output} <span class="text-muted extra-small fw-normal">(${o.jenis_output})</span>
                                 </label>
                             </div>
+                            
+                            <div class="row g-2 mb-2 ps-4">
+                                <div class="col-6">
+                                    <label class="extra-small text-muted mb-1">Volume Capaian</label>
+                                    <input type="number" step="0.01" name="output_data[${o.id}][volume]" 
+                                        class="form-control form-control-sm" value="${o.volume || ''}" placeholder="0">
+                                </div>
+                                <div class="col-6">
+                                    <label class="extra-small text-muted mb-1">Progres (%)</label>
+                                    <input type="number" step="0.01" name="output_data[${o.id}][progres]" 
+                                        class="form-control form-control-sm" value="${o.progres || ''}" placeholder="0">
+                                </div>
+                            </div>
+
                             <div class="d-flex align-items-center gap-2 ps-4">
                                 <button type="button" class="btn btn-sm btn-outline-secondary border-dashed upload-trigger" data-id="${o.id}">
                                     <i class="fas ${hasFile ? 'fa-sync' : 'fa-upload'} me-1"></i> 
-                                    ${hasFile ? 'Perbarui Dokumen' : 'Upload Dokumen'}
+                                    ${hasFile ? 'Perbarui' : 'Upload'}
                                 </button>
                                 
                                 <span class="text-muted extra-small">
                                     <span id="file-info-${o.id}">
                                         ${hasFile ? 
                                             `<a href="javascript:void(0)" onclick="showPreview('{{ asset('storage') }}/${o.file_path}', '${o.file_path.split('/').pop()}')" class="text-primary text-decoration-none fw-bold">
-                                                <i class="fas fa-eye me-1"></i> Lihat Dokumen
+                                                <i class="fas fa-eye me-1"></i> Lihat
                                             </a>` : 
-                                            '<i class="fas fa-info-circle me-1"></i> Belum ada file'
+                                            '<i class="fas fa-info-circle me-1"></i> No file'
                                         }
                                     </span>
                                 </span>
@@ -313,6 +323,12 @@
     });
 
     $(document).ready(function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const twParam = urlParams.get('triwulan');
+        if (twParam && ['1','2','3','4'].includes(twParam)) {
+            $('#selectTriwulan').val(twParam);
+        }
+
         $('#selectTriwulan').on('change', loadContext);
         loadContext();
     });

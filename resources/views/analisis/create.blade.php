@@ -25,6 +25,10 @@
                         <option value="4">TW 4</option>
                     </select>
                 </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Narasi Analisis Capaian Kinerja</label>
+                    <textarea name="narasi_analisis" class="form-control" rows="3" placeholder="Jelaskan detail capaian kinerja triwulan ini...">{{ old('narasi_analisis') }}</textarea>
+                </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Kendala</label>
                     <textarea name="kendala" class="form-control" rows="3">{{ old('kendala') }}</textarea>
@@ -36,6 +40,10 @@
                 <div class="col-md-12 mb-3">
                     <label class="form-label fw-bold">Rencana Tindak Lanjut</label>
                     <textarea name="rencana_tindak_lanjut" class="form-control" rows="2">{{ old('rencana_tindak_lanjut') }}</textarea>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Penjelasan Lainnya</label>
+                    <textarea name="penjelasan_lainnya" class="form-control" rows="2" placeholder="Keterangan tambahan jika diperlukan...">{{ old('penjelasan_lainnya') }}</textarea>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">PIC Tindak Lanjut</label>

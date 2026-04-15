@@ -278,6 +278,11 @@
                     <i class="fas fa-file-invoice"></i> Rekap Capaian Kinerja
                 </a>
 
+                <a href="{{ route('notulen.index') }}"
+                    class="nav-link {{ request()->routeIs('notulen.*') ? 'active' : '' }}">
+                    <i class="fas fa-file-signature"></i> Buat Notulen
+                </a>
+
                 <!-- <div class="mt-3 px-3">
                     <hr style="opacity: 0.1;">
                     <a href="/explorer-master/public" class="nav-link" style="color: #60a5fa !important;">

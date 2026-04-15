@@ -25,6 +25,10 @@
                         @endforeach
                     </select>
                 </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Narasi Analisis Capaian Kinerja</label>
+                    <textarea name="narasi_analisis" class="form-control" rows="3">{{ old('narasi_analisis', $analisi->narasi_analisis) }}</textarea>
+                </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">Kendala</label>
                     <textarea name="kendala" class="form-control" rows="3">{{ old('kendala', $analisi->kendala) }}</textarea>
@@ -36,6 +40,10 @@
                 <div class="col-md-12 mb-3">
                     <label class="form-label fw-bold">Rencana Tindak Lanjut</label>
                     <textarea name="rencana_tindak_lanjut" class="form-control" rows="2">{{ old('rencana_tindak_lanjut', $analisi->rencana_tindak_lanjut) }}</textarea>
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Penjelasan Lainnya</label>
+                    <textarea name="penjelasan_lainnya" class="form-control" rows="2">{{ old('penjelasan_lainnya', $analisi->penjelasan_lainnya) }}</textarea>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label fw-bold">PIC Tindak Lanjut</label>

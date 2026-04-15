@@ -71,6 +71,12 @@
                             </select>
                         </div>
                     </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Dasar Hitung & Basis Data Realisasi</label>
+                        <textarea name="dasar_hitung" class="form-control" rows="3" placeholder="Jelaskan dasar perhitungan dan basis data yang digunakan...">{{ old('dasar_hitung') }}</textarea>
+                        <div class="form-text">Contoh: Laporan Realisasi Anggaran Divisi Keuangan per 31 Desember.</div>
+                    </div>
                     
                     <div class="mt-4 pt-3 border-top">
                         <button type="submit" class="btn btn-primary">Simpan Indikator</button>

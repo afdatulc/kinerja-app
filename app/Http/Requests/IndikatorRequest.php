@@ -33,6 +33,7 @@ class IndikatorRequest extends FormRequest
             'target_tahunan' => 'required|numeric',
             'tahun' => 'required|integer',
             'pic_id' => 'nullable|exists:pegawais,id',
+            'dasar_hitung' => 'nullable|string',
         ];
     }
 }
