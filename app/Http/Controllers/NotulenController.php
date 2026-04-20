@@ -162,6 +162,7 @@ class NotulenController extends Controller
             $targetVal     = $ind->target ? $ind->target->$targetTwField : 0;
             $realisasiVal  = $ind->realisasis->first() ? $ind->realisasis->first()->realisasi_kumulatif : 0;
             $capaian       = $targetVal > 0 ? round(($realisasiVal / $targetVal) * 100, 2) : 0;
+            $capaianPk     = $ind->target_tahunan > 0 ? round(($realisasiVal / $ind->target_tahunan) * 100, 2) : 0;
 
             $dataTabelKinerja[] = [
                 'no'          => $index + 1,
@@ -171,6 +172,7 @@ class NotulenController extends Controller
                 'target_tw'   => $targetVal,
                 'realisasi_tw' => $realisasiVal,
                 'capaian_tw'  => $capaian . '%',
+                'capaian_pk'  => $capaianPk . '%',
             ];
         }
         $templateProcessor->cloneRowAndSetValues('no', $dataTabelKinerja);

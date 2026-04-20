@@ -125,7 +125,7 @@ class PegawaiController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
         Excel::import(new PegawaiImport, $request->file('file'));
         return redirect()->route('pegawai.index')->with('success', 'Data Pegawai berhasil diimport.');
     }

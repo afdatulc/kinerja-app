@@ -27,9 +27,9 @@ class OutputMasterImport implements ToModel, WithHeadingRow
 
         return new OutputMaster([
             'indikator_id' => $indikator->id,
-            'nama_output'  => $row['nama_output'],
-            'jenis_output' => $row['jenis_output'] ?? 'Laporan',
-            'periode'      => $row['periode'] ?? 'Triwulanan',
+            'nama_output'  => trim($row['nama_output']),
+            'jenis_output' => trim($row['jenis_output'] ?? 'Laporan'),
+            'periode'      => trim($row['periode'] ?? 'Triwulanan'),
             'is_achieved'  => false,
         ]);
     }

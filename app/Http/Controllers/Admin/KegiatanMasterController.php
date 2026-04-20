@@ -151,7 +151,7 @@ class KegiatanMasterController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
         Excel::import(new KegiatanMasterImport, $request->file('file'));
         return redirect()->route('kegiatan-master.index')->with('success', 'Data Kegiatan berhasil diimport.');
     }

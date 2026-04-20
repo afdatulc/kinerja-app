@@ -201,7 +201,7 @@ class OutputMasterController extends Controller
 
     public function import(Request $request)
     {
-        $request->validate(['file' => 'required|mimes:xlsx,xls,csv']);
+        $request->validate(['file' => 'required|mimes:xlsx,xls']);
         Excel::import(new OutputMasterImport, $request->file('file'));
         return redirect()->route('output-master.index')->with('success', 'Data Master Output berhasil diimport.');
     }
@@ -209,17 +209,14 @@ class OutputMasterController extends Controller
     public function downloadTemplate()
     {
         $headers = ['kode_indikator', 'nama_output', 'jenis_output', 'periode'];
-        $example = ['1.1.1.1', 'Laporan Analisis Data Ketenagakerjaan', 'Laporan', 'Triwulanan'];
         
-        return Excel::download(new class($headers, $example) implements \Maatwebsite\Excel\Concerns\FromArray {
+        return Excel::download(new class($headers) implements \Maatwebsite\Excel\Concerns\FromArray {
             protected $headers;
-            protected $example;
-            public function __construct($headers, $example) { 
-                $this->headers = $headers; 
-                $this->example = $example; 
+            public function __construct($headers) { 
+                $this->headers = $headers;
             }
             public function array(): array { 
-                return [$this->headers, $this->example]; 
+                return [$this->headers]; 
             }
         }, 'template_import_output.xlsx');
     }

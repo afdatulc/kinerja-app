@@ -115,7 +115,7 @@ class IndikatorController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,xls,csv'
+            'file' => 'required|mimes:xlsx,xls'
         ]);
 
         Excel::import(new IndikatorImport, $request->file('file'));
