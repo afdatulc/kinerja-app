@@ -42,9 +42,10 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label class="form-label fw-bold">Tipe Indikator</label>
-                            <select name="tipe" class="form-select" required>
-                                <option value="Persen" {{ old('tipe') == 'Persen' ? 'selected' : '' }}>Persen</option>
-                                <option value="Non Persen" {{ old('tipe') == 'Non Persen' ? 'selected' : '' }}>Non Persen</option>
+                            <select name="tipe" class="form-select">
+                                <option value="" disabled selected>-- Pilih Tipe --</option>
+                                <option value="%" {{ old('tipe') == '%' ? 'selected' : '' }}>%</option>
+                                <option value="Non %" {{ old('tipe') == 'Non %' ? 'selected' : '' }}>Non %</option>
                             </select>
                         </div>
                         <div class="col-md-4 mb-3">

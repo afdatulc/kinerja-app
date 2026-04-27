@@ -20,6 +20,7 @@ class PegawaiImport implements ToModel, WithHeadingRow
             'unit_kerja' => $row['unit_kerja'],
             'status'     => $row['status'] ?? 'PNS',
             'seksi'      => $row['seksi'] ?? 'Lainnya',
+            'no_hp'      => $row['no_hp'] ?? null,
         ]);
     }
 }

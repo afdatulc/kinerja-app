@@ -22,16 +22,28 @@ class KegiatanMasterController extends Controller
         if (!auth()->user()->isAdmin()) {
             $pegawaiId = auth()->user()->pegawai_id;
             if ($pegawaiId) {
-                // Show activities where user is either the PIC of the parent indicator OR the Ketua Tim
+                // Show activities where user is either: 
+                // 1. Ketua Tim
+                // 2. Member (Anggota)
+                // 3. PIC of the parent indicator
                 $query->where(function($q) use ($pegawaiId) {
                     $q->where('ketua_tim_id', $pegawaiId)
+                      ->orWhereHas('anggotas', function($sq) use ($pegawaiId) {
+                          $sq->where('pegawai_id', $pegawaiId);
+                      })
                       ->orWhereHas('indikator', function($sq) use ($pegawaiId) {
                           $sq->where('pic_id', $pegawaiId);
                       });
                 });
                 
-                // Also filter the indicators dropdown for adding new kegiatans
-                $indikators = Indikator::where('pic_id', $pegawaiId)->get();
+                // Also filter the indicators dropdown for adding/filtering kegiatans
+                $indikators = Indikator::where('pic_id', $pegawaiId)
+                    ->orWhereHas('kegiatanMasters', function($q) use ($pegawaiId) {
+                        $q->where('ketua_tim_id', $pegawaiId)
+                          ->orWhereHas('anggotas', function($sq) use ($pegawaiId) {
+                              $sq->where('pegawai_id', $pegawaiId);
+                          });
+                    })->get();
             } else {
                 // If user doesn't have a linked pegawai profile, show nothing
                 $query->whereRaw('1 = 0');
@@ -79,6 +91,10 @@ class KegiatanMasterController extends Controller
             'ketua_tim_id' => $request->ketua_tim_id,
         ]);
 
+        if ($request->has('anggotas')) {
+            $kegiatan->anggotas()->sync($request->anggotas);
+        }
+
         if ($request->ajax()) {
             return response()->json([
                 'status' => 'success',
@@ -123,6 +139,10 @@ class KegiatanMasterController extends Controller
             'tahapan_json' => $validated['tahapan'],
             'ketua_tim_id' => $request->ketua_tim_id,
         ]);
+
+        if ($request->has('anggotas')) {
+            $kegiatanMaster->anggotas()->sync($request->anggotas);
+        }
 
         if ($request->ajax()) {
             return response()->json([

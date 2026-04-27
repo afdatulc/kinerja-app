@@ -480,10 +480,6 @@
                         data-title="Master Pegawai">
                         <i class="fas fa-users-gear"></i> <span class="link-text">Master Pegawai</span>
                     </a>
-                    <a href="{{ route('target.index') }}"
-                        class="nav-link {{ request()->routeIs('target.*') ? 'active' : '' }}" data-title="Target">
-                        <i class="fas fa-bullseye"></i> <span class="link-text">Target</span>
-                    </a>
                     <a href="{{ route('analisis.index') }}"
                         class="nav-link {{ request()->routeIs('analisis.*') ? 'active' : '' }}"
                         data-title="Analisis & Kendala">

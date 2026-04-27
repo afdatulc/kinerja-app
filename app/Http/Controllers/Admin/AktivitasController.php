@@ -65,6 +65,16 @@ class AktivitasController extends Controller
 
         $lampirans = $aktivitas->lampiran ?? [];
 
+        // Handle deletion of existing attachments
+        if ($request->has('deleted_lampiran')) {
+            $deleted = $request->deleted_lampiran;
+            $lampirans = array_filter($lampirans, function($path) use ($deleted) {
+                return !in_array($path, $deleted);
+            });
+            // Re-index array
+            $lampirans = array_values($lampirans);
+        }
+
         if ($request->hasFile('lampiran')) {
             foreach ($request->file('lampiran') as $file) {
                 $path = $file->store('aktivitas', 'public');

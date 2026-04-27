@@ -145,13 +145,6 @@
                             </div>
                         </div>
 
-                        <div class="mb-0">
-                            <label class="form-label fw-bold small">Dokumen Bukti/Output (Optional)</label>
-                            <input type="file" name="file" id="file" class="form-control rounded-3 shadow-none border-light-subtle">
-                            <div id="fileInfo" class="mt-2 small text-primary d-none">
-                                <i class="fas fa-paperclip me-1"></i> File saat ini: <span id="currentFileName"></span>
-                            </div>
-                        </div>
                     </div>
                     <div class="modal-footer border-0 pt-0">
                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>

@@ -11,22 +11,12 @@ use Illuminate\Support\Facades\Storage;
 
 class PublicInputController extends Controller
 {
-    public function index()
-    {
-        $tahun = request('tahun', 2026);
-        $triwulan = request('triwulan', 1);
-        
-        $indikators = Indikator::where('tahun', $tahun)->get();
-        $pegawais = Pegawai::orderBy('nama')->get();
-        
-        return view('public.index', compact('indikators', 'tahun', 'triwulan', 'pegawais'));
-    }
-
-
     public function storeKendala(Request $request)
     {
+        $user = auth()->user();
+        $pegawai = $user->pegawai;
+
         $validated = $request->validate([
-            'nip' => 'required|string',
             'indikator_id' => 'required|exists:indikators,id',
             'triwulan' => 'required|integer|between:1,4',
             'kendala' => 'required|string',
@@ -35,15 +25,11 @@ class PublicInputController extends Controller
             'rencana_tindak_lanjut' => 'nullable|string',
             'pic_tindak_lanjut' => 'nullable|string',
             'batas_waktu' => 'nullable|date',
+            'kegiatan_id' => 'required|exists:kegiatan_masters,id',
         ]);
 
-        $pegawai = Pegawai::where('nip', $validated['nip'])
-                        ->orWhere('email_bps', $validated['nip'])
-                        ->first();
-
-        if (!$pegawai) {
-            return redirect()->back()->withErrors(['nip' => 'NIP atau Email tidak terdaftar dalam database kami.'])->withInput();
-        }
+        $kegiatan = \App\Models\KegiatanMaster::find($validated['kegiatan_id']);
+        $isKetuaTim = $kegiatan->ketua_tim_id == $pegawai->id;
 
         Analisis::create([
             'indikator_id' => $validated['indikator_id'],
@@ -52,9 +38,10 @@ class PublicInputController extends Controller
             'kendala' => $validated['kendala'],
             'severity' => $validated['severity'],
             'solusi' => $validated['solusi'],
-            'rencana_tindak_lanjut' => $validated['rencana_tindak_lanjut'],
-            'pic_tindak_lanjut' => $validated['pic_tindak_lanjut'],
-            'batas_waktu' => $validated['batas_waktu'],
+            'rencana_tindak_lanjut' => $isKetuaTim ? $validated['rencana_tindak_lanjut'] : null,
+            'pic_tindak_lanjut' => $isKetuaTim ? $validated['pic_tindak_lanjut'] : ($pegawai->nama),
+            'batas_waktu' => $isKetuaTim ? $validated['batas_waktu'] : null,
+            'kegiatan_id' => $validated['kegiatan_id'],
         ]);
 
         return redirect()->back()->with('success', 'Laporan kendala berhasil dikirim.');
@@ -62,14 +49,37 @@ class PublicInputController extends Controller
 
     public function getKegiatan($indikator_id)
     {
-        $kegiatans = \App\Models\KegiatanMaster::where('indikator_id', $indikator_id)->get(['id', 'nama_kegiatan', 'tahapan_json']);
+        $user = auth()->user();
+        $pegawai_id = $user->pegawai_id;
+
+        $query = \App\Models\KegiatanMaster::where('indikator_id', $indikator_id);
+
+        if (!$user->isAdmin()) {
+            $query->where(function($q) use ($pegawai_id) {
+                $q->where('ketua_tim_id', $pegawai_id)
+                  ->orWhereHas('anggotas', function($q2) use ($pegawai_id) {
+                      $q2->where('pegawai_id', $pegawai_id);
+                  });
+            });
+        }
+
+        $kegiatans = $query->get(['id', 'nama_kegiatan', 'tahapan_json', 'ketua_tim_id']);
+        
+        // Add anggota list for Ketua Tim selection
+        $kegiatans->map(function($k) {
+            $k->anggotas_list = $k->anggotas()->get(['nama']);
+            return $k;
+        });
+
         return response()->json($kegiatans);
     }
 
     public function storeAktivitas(Request $request)
     {
+        $user = auth()->user();
+        $pegawai = $user->pegawai;
+
         $validated = $request->validate([
-            'nip' => 'required|string',
             'indikator_id' => 'required|exists:indikators,id',
             'kegiatan_id' => 'required|exists:kegiatan_masters,id',
             'triwulan' => 'required|integer|between:1,4',
@@ -79,14 +89,6 @@ class PublicInputController extends Controller
             'uraian' => 'required|string',
             'lampiran.*' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,csv|max:10240',
         ]);
-
-        $pegawai = Pegawai::where('nip', $validated['nip'])
-                        ->orWhere('email_bps', $validated['nip'])
-                        ->first();
-
-        if (!$pegawai) {
-            return redirect()->back()->withErrors(['nip' => 'NIP atau Email tidak terdaftar dalam database kami.'])->withInput();
-        }
 
         $paths = [];
         if ($request->hasFile('lampiran')) {

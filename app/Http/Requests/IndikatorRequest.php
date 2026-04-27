@@ -23,14 +23,15 @@ class IndikatorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tujuan' => 'required',
+            'kode' => 'nullable',
+            'tujuan' => 'nullable',
             'sasaran' => 'required',
             'indikator_kinerja' => 'required',
-            'jenis_indikator' => 'required|in:IKU,Proksi',
-            'periode' => 'required|in:Triwulanan,Tahunan',
-            'tipe' => 'required|in:Persen,Non Persen',
-            'satuan' => 'required',
-            'target_tahunan' => 'required|numeric',
+            'jenis_indikator' => 'required',
+            'periode' => 'nullable',
+            'tipe' => 'nullable',
+            'satuan' => 'nullable',
+            'target_tahunan' => 'nullable|numeric',
             'tahun' => 'required|integer',
             'pic_id' => 'nullable|exists:pegawais,id',
             'dasar_hitung' => 'nullable|string',

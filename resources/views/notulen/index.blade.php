@@ -40,8 +40,9 @@
                         <div class="col-md-6">
                             <label for="tahun" class="form-label fw-bold">Periode Tahun</label>
                             <select name="tahun" id="tahun" class="form-select" required>
+                                <option value="" selected disabled>Pilih Tahun</option>
                                 @foreach($years as $year)
-                                    <option value="{{ $year }}" {{ $year == date('Y') ? 'selected' : '' }}>{{ $year }}</option>
+                                    <option value="{{ $year }}">{{ $year }}</option>
                                 @endforeach
                             </select>
                         </div>

@@ -11,7 +11,7 @@ class EvidenceController extends Controller
 {
     public function index(Request $request)
     {
-        $tahun = $request->get('tahun', date('Y'));
+        $tahun = $request->get('tahun');
         $triwulan = $request->get('triwulan');
         $indikator_id = $request->get('indikator_id');
         
@@ -19,7 +19,9 @@ class EvidenceController extends Controller
             ->whereNotNull('lampiran')
             ->where('lampiran', '!=', '[]')
             ->whereHas('indikator', function($q) use ($tahun) {
-                $q->where('tahun', $tahun);
+                if ($tahun) {
+                    $q->where('tahun', $tahun);
+                }
             });
 
         if ($triwulan) {

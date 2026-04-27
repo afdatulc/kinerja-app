@@ -19,9 +19,17 @@ class OutputMasterController extends Controller
         if (!auth()->user()->isAdmin()) {
             $pegawaiId = auth()->user()->pegawai_id;
             if ($pegawaiId) {
-                // Only show outputs linked to indicators assigned to this user
+                // Show outputs where the indicator: 
+                // 1. Has this user as PIC
+                // 2. Has an activity (kegiatan) where this user is leader or member
                 $query->whereHas('indikator', function($q) use ($pegawaiId) {
-                    $q->where('pic_id', $pegawaiId);
+                    $q->where('pic_id', $pegawaiId)
+                      ->orWhereHas('kegiatanMasters', function($sq) use ($pegawaiId) {
+                          $sq->where('ketua_tim_id', $pegawaiId)
+                            ->orWhereHas('anggotas', function($ssq) use ($pegawaiId) {
+                                $ssq->where('pegawai_id', $pegawaiId);
+                            });
+                      });
                 });
             } else {
                 // If user doesn't have a linked pegawai profile, show nothing
@@ -36,8 +44,15 @@ class OutputMasterController extends Controller
         if (!auth()->user()->isAdmin()) {
             $pegawaiId = auth()->user()->pegawai_id;
             if ($pegawaiId) {
-                // Dropdown indicators only shows what they are PIC of
-                $indikators = Indikator::where('pic_id', $pegawaiId)->get();
+                // Dropdown indicators only shows what they are PIC of 
+                // or have an activity in
+                $indikators = Indikator::where('pic_id', $pegawaiId)
+                    ->orWhereHas('kegiatanMasters', function($q) use ($pegawaiId) {
+                        $q->where('ketua_tim_id', $pegawaiId)
+                          ->orWhereHas('anggotas', function($sq) use ($pegawaiId) {
+                              $sq->where('pegawai_id', $pegawaiId);
+                          });
+                    })->get();
             } else {
                 $indikators = collect();
             }
@@ -158,6 +173,11 @@ class OutputMasterController extends Controller
 
     public function toggleStatus(OutputMaster $outputMaster)
     {
+        $user = auth()->user();
+        if (!$user->isAdmin() && $outputMaster->indikator->pic_id != $user->pegawai_id) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+        }
+
         $outputMaster->update([
             'is_achieved' => !$outputMaster->is_achieved
         ]);
@@ -171,6 +191,11 @@ class OutputMasterController extends Controller
 
     public function uploadFile(Request $request, OutputMaster $outputMaster)
     {
+        $user = auth()->user();
+        if (!$user->isAdmin() && $outputMaster->indikator->pic_id != $user->pegawai_id) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png|max:51200',
         ]);

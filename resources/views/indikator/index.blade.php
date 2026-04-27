@@ -44,7 +44,7 @@
                             <th width="120">Jenis / Periode</th>
                             <th width="80" class="text-center">Kegiatan</th>
                             <th width="100" class="text-center">Output</th>
-                            <th width="100">Satuan</th>
+                            <th width="120">Tipe / Satuan</th>
                             <th width="100">Target</th>
                             <th width="150">PIC</th>
                             <th width="120" class="text-center">Aksi</th>
@@ -79,7 +79,10 @@
                                         {{ $progress }}
                                     </span>
                                 </td>
-                                <td><span class="badge bg-light text-dark border fw-normal">{{ $i->satuan }}</span></td>
+                                <td>
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary-subtle rounded-pill px-2 mb-1">{{ $i->tipe ?: '-' }}</span>
+                                    <div class="extra-small text-muted ps-1">{{ $i->satuan ?: '-' }}</div>
+                                </td>
                                 <td class="fw-bold text-primary">{{ $i->target_tahunan }}</td>
                                 <td>
                                     @if($i->pic)
@@ -90,21 +93,22 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    <div class="d-flex justify-content-center gap-1">
+                                    <div class="d-flex justify-content-center align-items-center gap-2">
                                         <a href="{{ route('realisasi.entry', $i) }}"
-                                            class="btn btn-sm btn-outline-success rounded-3" title="Input Progress">
+                                            class="btn btn-sm btn-outline-success rounded-3 d-flex align-items-center justify-content-center" 
+                                            style="width: 32px; height: 32px;" title="Input Progress">
                                             <i class="fas fa-chart-line"></i>
                                         </a>
+                                        @if(auth()->user()->isAdmin() || $i->pic_id == auth()->user()->pegawai_id)
+                                            <button class="btn btn-sm btn-primary rounded-3 manage-indikator d-flex align-items-center justify-content-center"
+                                                style="width: 32px; height: 32px;"
+                                                data-id="{{ $i->id }}" data-kode="{{ $i->kode }}" title="Kelola Indikator">
+                                                <i class="fas fa-cog"></i>
+                                            </button>
+                                        @endif
                                         @if(auth()->user()->isAdmin())
-                                            <button class="btn btn-sm btn-outline-info rounded-3 edit-tautan"
-                                                data-id="{{ $i->id }}" data-kode="{{ $i->kode }}" title="Tautan & Basis Data">
-                                                <i class="fas fa-link"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-primary rounded-3 edit-indikator"
-                                                data-id="{{ $i->id }}" data-kode="{{ $i->kode }}" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger rounded-3 delete-indikator"
+                                            <button class="btn btn-sm btn-outline-danger rounded-3 delete-indikator d-flex align-items-center justify-content-center"
+                                                style="width: 32px; height: 32px;"
                                                 data-id="{{ $i->id }}" data-kode="{{ $i->kode }}" title="Hapus">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -119,30 +123,194 @@
         </div>
     </div>
 
-    <!-- Modal Tambah/Edit Indikator -->
+    <!-- Modal Unified Manage Indikator -->
+    <div class="modal fade" id="modalManageIndikator" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold">Kelola Indikator Kinerja</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <!-- Segmented Control Navigation -->
+                    <div class="px-4 pt-4">
+                        <div class="bg-light p-1 rounded-4 d-flex">
+                            <ul class="nav nav-pills nav-fill w-100" id="manageTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active fw-bold small py-2 rounded-3" id="meta-tab" data-bs-toggle="tab" data-bs-target="#meta" type="button" role="tab"><i class="fas fa-info-circle me-1"></i> Metadata</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-bold small py-2 rounded-3" id="target-tab" data-bs-toggle="tab" data-bs-target="#target" type="button" role="tab"><i class="fas fa-bullseye me-1"></i> Target TW</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-bold small py-2 rounded-3" id="tautan-tab" data-bs-toggle="tab" data-bs-target="#tautan" type="button" role="tab"><i class="fas fa-link me-1"></i> Tautan & Basis Data</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="tab-content p-4" id="manageTabsContent">
+                        <!-- Tab 1: Metadata -->
+                        <div class="tab-pane fade show active" id="meta" role="tabpanel">
+                            <form id="formIndikator">
+                                @csrf
+                                <input type="hidden" name="_method" id="formMethod" value="POST">
+                                <input type="hidden" id="indikator_id">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Kode Indikator</label>
+                                        <input type="text" name="kode" id="kode" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" placeholder="Contoh: 1.1.1">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Jenis</label>
+                                        <select name="jenis_indikator" id="jenis_indikator" class="form-select form-select-sm rounded-3 shadow-none border-light-subtle" required>
+                                            <option value="" disabled selected>-- Pilih Jenis --</option>
+                                            <option value="IKU">IKU</option>
+                                            <option value="Proksi">Proksi</option>
+                                            <option value="IK">IK</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Tahun</label>
+                                        <input type="number" name="tahun" id="tahun" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Sasaran</label>
+                                        <input type="text" name="sasaran" id="sasaran" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" required>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Indikator Kinerja</label>
+                                        <input type="text" name="indikator_kinerja" id="indikator_kinerja" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Periode</label>
+                                        <select name="periode" id="periode" class="form-select form-select-sm rounded-3 shadow-none border-light-subtle">
+                                            <option value="" disabled selected>-- Pilih Periode --</option>
+                                            <option value="Tahunan">Tahunan</option>
+                                            <option value="Bulanan">Bulanan</option>
+                                            <option value="Triwulanan">Triwulanan</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Tipe</label>
+                                        <select name="tipe" id="tipe" class="form-select form-select-sm rounded-3 shadow-none border-light-subtle">
+                                            <option value="" disabled selected>-- Pilih Tipe --</option>
+                                            <option value="%">%</option>
+                                            <option value="Non %">Non %</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Satuan</label>
+                                        <input type="text" name="satuan" id="satuan" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle" placeholder="Persen">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label fw-bold small">Target Tahunan</label>
+                                        <input type="number" step="0.01" name="target_tahunan" id="target_tahunan" class="form-control form-control-sm rounded-3 shadow-none border-light-subtle">
+                                    </div>
+                                    <div class="col-md-8">
+                                        <label class="form-label fw-bold small">Penanggung Jawab (PIC)</label>
+                                        <select name="pic_id" id="pic_id" class="form-select form-select-sm rounded-3 shadow-none border-light-subtle" {{ !auth()->user()->isAdmin() ? 'disabled' : '' }}>
+                                            <option value="">-- Tanpa PIC --</option>
+                                            @foreach($pegawais as $p)
+                                                <option value="{{ $p->id }}">{{ $p->nama }} ({{ $p->nip }})</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpan"><i class="fas fa-save me-1"></i> Simpan Metadata</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Tab 2: Target Triwulanan -->
+                        <div class="tab-pane fade" id="target" role="tabpanel">
+                            <form id="formTarget" class="d-flex flex-column" style="min-height: 380px;">
+                                @csrf
+                                <input type="hidden" name="_method" value="PUT">
+                                <input type="hidden" id="target_indikator_id">
+                                <div class="flex-grow-1">
+                                    <div class="alert alert-info border-0 rounded-4 shadow-sm mb-4">
+                                        <div class="small fw-bold"><i class="fas fa-info-circle me-1"></i> Atur target kumulatif untuk masing-masing triwulan.</div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small">Target TW I</label>
+                                            <input type="number" step="0.01" name="target_tw1" id="target_tw1" class="form-control rounded-3 border-light-subtle">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small">Target TW II</label>
+                                            <input type="number" step="0.01" name="target_tw2" id="target_tw2" class="form-control rounded-3 border-light-subtle">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small">Target TW III</label>
+                                            <input type="number" step="0.01" name="target_tw3" id="target_tw3" class="form-control rounded-3 border-light-subtle">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label fw-bold small">Target TW IV</label>
+                                            <input type="number" step="0.01" name="target_tw4" id="target_tw4" class="form-control rounded-3 border-light-subtle">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-3 text-end">
+                                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpanTarget"><i class="fas fa-save me-1"></i> Simpan Target</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Tab 3: Tautan & Basis Data -->
+                        <div class="tab-pane fade" id="tautan" role="tabpanel">
+                            <form id="formTautan">
+                                @csrf
+                                <input type="hidden" id="tautan_kode">
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Dasar Hitung & Basis Data Realisasi IKU</label>
+                                        <textarea name="dasar_hitung" id="tautan_dasar_hitung" class="form-control rounded-3 shadow-none border-light-subtle tinymce-editor" rows="3" placeholder="Jelaskan dasar perhitungan..."></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Tautan Bukti Dukung Kinerja</label>
+                                        <input type="url" name="link_bukti_kinerja" id="link_bukti_kinerja" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="https://...">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Tautan Bukti Dukung Rencana Tindak Lanjut</label>
+                                        <input type="url" name="link_bukti_tindak_lanjut" id="link_bukti_tindak_lanjut" class="form-control rounded-3 shadow-none border-light-subtle" placeholder="https://...">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold small">Penjelasan atau Pembahasan Lainnya</label>
+                                        <textarea name="penjelasan_lainnya" id="penjelasan_lainnya" class="form-control rounded-3 shadow-none border-light-subtle" rows="3" placeholder="Tambahkan penjelasan lainnya..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="mt-4 text-end">
+                                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpanTautan"><i class="fas fa-save me-1"></i> Simpan Tautan</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal Tambah Indikator (Specifically for Adding) -->
     <div class="modal fade" id="modalIndikator" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="modalTitle">Tambah Indikator Kinerja</h5>
+                    <h5 class="modal-title fw-bold">Tambah Indikator Kinerja Baru</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <form id="formIndikator">
+                <form id="formTambahIndikator">
                     @csrf
-                    <input type="hidden" name="_method" id="formMethod" value="POST">
-                    <input type="hidden" id="indikator_id">
                     <div class="modal-body p-4">
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small">Kode Indikator</label>
-                                <input type="text" name="kode" id="kode"
-                                    class="form-control rounded-3 shadow-none border-light-subtle"
-                                    placeholder="Contoh: 1.1.1">
+                                <input type="text" name="kode" class="form-control rounded-3 border-light-subtle" placeholder="1.1.1" required>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small">Jenis</label>
-                                <select name="jenis_indikator" id="jenis_indikator"
-                                    class="form-select rounded-3 shadow-none border-light-subtle" required>
+                                <select name="jenis_indikator" class="form-select rounded-3" required>
+                                    <option value="" disabled selected>-- Pilih jenis indikator --</option>
                                     <option value="IKU">IKU</option>
                                     <option value="Proksi">Proksi</option>
                                     <option value="IK">IK</option>
@@ -150,68 +318,20 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label fw-bold small">Tahun</label>
-                                <input type="number" name="tahun" id="tahun"
-                                    class="form-control rounded-3 shadow-none border-light-subtle" value="{{ date('Y') }}"
-                                    required>
+                                <input type="number" name="tahun" value="{{ date('Y') }}" class="form-control rounded-3" required>
                             </div>
-
-                            <div class="col-12">
-                                <label class="form-label fw-bold small">Tujuan Strategis</label>
-                                <textarea name="tujuan" id="tujuan"
-                                    class="form-control rounded-3 shadow-none border-light-subtle" rows="2"
-                                    placeholder="Deskripsi tujuan strategis..."></textarea>
-                            </div>
-
                             <div class="col-12">
                                 <label class="form-label fw-bold small">Sasaran</label>
-                                <input type="text" name="sasaran" id="sasaran"
-                                    class="form-control rounded-3 shadow-none border-light-subtle"
-                                    placeholder="Deskripsi sasaran..." required>
+                                <input type="text" name="sasaran" class="form-control rounded-3" required>
                             </div>
-
                             <div class="col-12">
                                 <label class="form-label fw-bold small">Indikator Kinerja</label>
-                                <input type="text" name="indikator_kinerja" id="indikator_kinerja"
-                                    class="form-control rounded-3 shadow-none border-light-subtle"
-                                    placeholder="Nama indikator kinerja..." required>
+                                <input type="text" name="indikator_kinerja" class="form-control rounded-3" required>
                             </div>
-
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold small">Periode</label>
-                                <select name="periode" id="periode"
-                                    class="form-select rounded-3 shadow-none border-light-subtle" required>
-                                    <option value="Tahunan">Tahunan</option>
-                                    <option value="Bulanan">Bulanan</option>
-                                    <option value="Triwulanan">Triwulanan</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold small">Tipe Data</label>
-                                <select name="tipe" id="tipe" class="form-select rounded-3 shadow-none border-light-subtle"
-                                    required>
-                                    <option value="Persen">Persen</option>
-                                    <option value="Dokumen">Dokumen</option>
-                                    <option value="Nilai">Nilai</option>
-                                    <option value="Rasio">Rasio</option>
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label fw-bold small">Satuan</label>
-                                <input type="text" name="satuan" id="satuan"
-                                    class="form-control rounded-3 shadow-none border-light-subtle"
-                                    placeholder="Contoh: Persen" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold small">Target Tahunan</label>
-                                <input type="number" step="0.01" name="target_tahunan" id="target_tahunan"
-                                    class="form-control rounded-3 shadow-none border-light-subtle" required>
-                            </div>
-                            <div class="col-md-6">
+                            <div class="col-12">
                                 <label class="form-label fw-bold small">Penanggung Jawab (PIC)</label>
-                                <select name="pic_id" id="pic_id"
-                                    class="form-select rounded-3 shadow-none border-light-subtle">
-                                    <option value="">-- Tanpa PIC --</option>
+                                <select name="pic_id" class="form-select rounded-3" required>
+                                    <option value="" disabled selected>-- Pilih PIC --</option>
                                     @foreach($pegawais as $p)
                                         <option value="{{ $p->id }}">{{ $p->nama }} ({{ $p->nip }})</option>
                                     @endforeach
@@ -221,55 +341,7 @@
                     </div>
                     <div class="modal-footer border-0 pt-0">
                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpan">Simpan
-                            Indikator</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <!-- Modal Tautan & Basis Data -->
-    <div class="modal fade" id="modalTautan" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header border-0 pb-0">
-                    <h5 class="modal-title fw-bold">Tautan & Basis Data Realisasi</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="formTautan">
-                    @csrf
-                    <input type="hidden" id="tautan_kode">
-                    <div class="modal-body p-4">
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label class="form-label fw-bold small">Dasar Hitung & Basis Data Realisasi IKU</label>
-                                <textarea name="dasar_hitung" id="tautan_dasar_hitung"
-                                    class="form-control rounded-3 shadow-none border-light-subtle tinymce-editor" rows="3"
-                                    placeholder="Jelaskan dasar perhitungan dan basis data yang digunakan..."></textarea>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label fw-bold small">Tautan Bukti Dukung Kinerja</label>
-                                <input type="url" name="link_bukti_kinerja" id="link_bukti_kinerja"
-                                    class="form-control rounded-3 shadow-none border-light-subtle"
-                                    placeholder="https://...">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label fw-bold small">Tautan Bukti Dukung Rencana Tindak Lanjut Triwulan Sebelumnya</label>
-                                <input type="url" name="link_bukti_tindak_lanjut" id="link_bukti_tindak_lanjut"
-                                    class="form-control rounded-3 shadow-none border-light-subtle"
-                                    placeholder="https://...">
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label fw-bold small">Penjelasan atau Pembahasan Lainnya</label>
-                                <textarea name="penjelasan_lainnya" id="penjelasan_lainnya"
-                                    class="form-control rounded-3 shadow-none border-light-subtle" rows="3"
-                                    placeholder="Tambahkan penjelasan lainnya jika ada..."></textarea>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 pt-0">
-                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm" id="btnSimpanTautan">Simpan </button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4" id="btnSimpanBaru">Simpan</button>
                     </div>
                 </form>
             </div>
@@ -284,42 +356,43 @@
                 language: window.DATATABLES_ID
             });
 
-            // Reset Modal on Close
-            $('#modalIndikator').on('hidden.bs.modal', function () {
+            // Unified Manage Modal Reset
+            $('#modalManageIndikator').on('hidden.bs.modal', function () {
                 $('#formIndikator')[0].reset();
-                $('#modalTitle').text('Tambah Indikator Kinerja');
-                $('#formMethod').val('POST');
-                $('#indikator_id').val('');
-                $('#pic_id').val('').trigger('change');
-            });
-            
-            // Tautan Modal Reset
-            $('#modalTautan').on('hidden.bs.modal', function () {
+                $('#formTarget')[0].reset();
                 $('#formTautan')[0].reset();
-                $('#tautan_kode').val('');
                 tinymce.get('tautan_dasar_hitung')?.setContent('');
-                // Reset plain textarea penjelasan_lainnya
-                $('#penjelasan_lainnya').val('');
+                $('#meta-tab').tab('show'); // Reset to first tab
+                $('#manageTabsContent').scrollTop(0);
             });
 
-            $('#modalTautan').on('shown.bs.modal', function () {
+            // Reset scroll when switching tabs
+            $('#manageTabs').on('shown.bs.tab', function () {
+                $('#manageTabsContent').animate({ scrollTop: 0 }, 200);
+            });
+
+            $('#modalManageIndikator').on('shown.bs.modal', function () {
                 if (!tinymce.get('tautan_dasar_hitung')) {
                     window.initTinyMCE('#tautan_dasar_hitung');
                 }
             });
-            // Edit Button Click (Event Delegation)
-            $(document).on('click', '.edit-indikator', function () {
+
+            // Open Unified Manage Modal
+            $(document).on('click', '.manage-indikator', function () {
                 const id = $(this).data('id');
                 const kode = $(this).data('kode');
-                $('#modalTitle').text('Edit Indikator Kinerja');
-                $('#formMethod').val('PUT');
+                
                 $('#indikator_id').val(id);
-                $('#formIndikator').data('kode', kode); // Store kode for update URL
-                $('#modalIndikator').modal('show');
+                $('#target_indikator_id').val(id);
+                $('#tautan_kode').val(kode);
+                $('#formIndikator').data('kode', kode);
+                
+                $('#modalManageIndikator').modal('show');
 
+                // Load Data
                 $.get(`{{ url('indikator') }}/${kode}`, function (data) {
+                    // Fill Metadata
                     $('#kode').val(data.kode);
-                    $('#tujuan').val(data.tujuan);
                     $('#sasaran').val(data.sasaran);
                     $('#indikator_kinerja').val(data.indikator_kinerja);
                     $('#jenis_indikator').val(data.jenis_indikator);
@@ -329,139 +402,119 @@
                     $('#target_tahunan').val(data.target_tahunan);
                     $('#tahun').val(data.tahun);
                     $('#pic_id').val(data.pic_id).trigger('change');
-                });
-            });
 
-            // Tautan Edit Click
-            $(document).on('click', '.edit-tautan', function () {
-                const kode = $(this).data('kode');
-                $('#tautan_kode').val(kode);
-                $('#modalTautan').modal('show');
-
-                $.get(`{{ url('indikator') }}/${kode}`, function (data) {
+                    // Fill Tautan
                     $('#tautan_dasar_hitung').val(data.dasar_hitung || '');
                     tinymce.get('tautan_dasar_hitung')?.setContent(data.dasar_hitung || '');
                     $('#link_bukti_kinerja').val(data.link_bukti_kinerja || '');
                     $('#link_bukti_tindak_lanjut').val(data.link_bukti_tindak_lanjut || '');
                     $('#penjelasan_lainnya').val(data.penjelasan_lainnya || '');
                 });
+
+                // Load Target Data via separate show route
+                $.get(`{{ url('target') }}/${id}`, function (data) {
+                    $('#target_tw1').val(data.target_tw1);
+                    $('#target_tw2').val(data.target_tw2);
+                    $('#target_tw3').val(data.target_tw3);
+                    $('#target_tw4').val(data.target_tw4);
+                });
             });
 
-
-            // Form Submit (AJAX)
+            // Form Submit: Metadata
             $('#formIndikator').on('submit', function (e) {
                 e.preventDefault();
                 const id = $('#indikator_id').val();
                 const kode = $(this).data('kode');
-                const method = $('#formMethod').val();
-                const url = method === 'POST' ? "{{ route('indikator.store') }}" : `{{ url('indikator') }}/${kode}`;
                 const btn = $('#btnSimpan');
 
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
 
                 $.ajax({
-                    url: url,
+                    url: `{{ url('indikator') }}/${kode}`,
+                    method: 'POST',
+                    data: $(this).serialize() + '&_method=PUT',
+                    success: function (response) {
+                        toastr.success('Metadata berhasil diperbarui');
+                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Simpan Metadata');
+                        // Update table row if needed...
+                    },
+                    error: function (xhr) {
+                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Simpan Metadata');
+                        toastr.error('Gagal menyimpan metadata.');
+                    }
+                });
+            });
+
+            // Form Submit: Target
+            $('#formTarget').on('submit', function (e) {
+                e.preventDefault();
+                const id = $('#target_indikator_id').val();
+                const btn = $('#btnSimpanTarget');
+
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
+
+                $.ajax({
+                    url: `{{ url('target') }}/${id}`,
                     method: 'POST',
                     data: $(this).serialize(),
                     success: function (response) {
                         toastr.success(response.message);
-                        $('#modalIndikator').modal('hide');
-
-                        if (method === 'PUT') {
-                            const data = response.data;
-                            const row = $(`#row-${id}`);
-
-                            // Update Columns Manually
-                            row.find('td:nth-child(2)').html(`<span class="small fw-bold text-primary">${data.kode || '-'}</span>`);
-                            row.find('td:nth-child(3)').html(`
-                                <div class="fw-bold text-dark mb-1">${data.indikator_kinerja}</div>
-                                <div class="small text-muted" style="font-size: 0.75rem;"><i class="fas fa-crosshairs me-1 text-secondary"></i>${data.sasaran}</div>
-                            `);
-                            row.find('td:nth-child(4)').html(`
-                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2 mb-1">${data.jenis_indikator}</span>
-                                <div class="extra-small text-muted ps-1">${data.periode} (${data.tahun})</div>
-                            `);
-                            row.find('td:nth-child(5)').html(`<span class="badge bg-light text-dark border fw-normal">${data.satuan}</span>`);
-                            row.find('td:nth-child(6)').text(data.target_tahunan);
-
-                            // Update PIC (Assuming we need to fetch name if only ID returned, 
-                            // but let's try to get it from the select text)
-                            const picName = $('#pic_id option:selected').text().split(' (')[0];
-                            const picNip = $('#pic_id option:selected').text().split(' (')[1]?.replace(')', '') || '';
-
-                            if ($('#pic_id').val()) {
-                                row.find('td:nth-child(7)').html(`
-                                    <div class="small fw-bold text-dark">${picName}</div>
-                                    <div class="extra-small text-muted">${picNip}</div>
-                                `);
-                            } else {
-                                row.find('td:nth-child(7)').html('<span class="text-muted small italic">- Belum diatur -</span>');
-                            }
-
-                            // Invalidate and draw (keep paging)
-                            const table = $('#indikatorTable').DataTable();
-                            table.row(row).invalidate().draw(false);
-                        } else {
-                            // For Create, it's easier to reload or add row, 
-                            // but user specifically asked for edit state retention.
-                            setTimeout(() => location.reload(), 1000);
-                        }
+                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Simpan Target');
                     },
                     error: function (xhr) {
-                        btn.prop('disabled', false).html('Simpan Indikator');
-                        const errors = xhr.responseJSON.errors;
-                        if (errors) {
-                            Object.values(errors).forEach(err => toastr.error(err[0]));
-                        } else {
-                            toastr.error('Terjadi kesalahan saat menyimpan data.');
-                        }
+                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Simpan Target');
+                        toastr.error('Gagal menyimpan target.');
                     }
                 });
             });
 
-            // Tautan Submit
+            // Form Submit: Tautan
             $('#formTautan').on('submit', function (e) {
                 e.preventDefault();
                 const kode = $('#tautan_kode').val();
-                if (!kode) return;
                 const btn = $('#btnSimpanTautan');
 
-                // Sync TinyMCE content to textarea before serializing
                 tinymce.triggerSave();
                 btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
-
-                // Build data manually to ensure all fields are included
-                const formData = {
-                    _token: "{{ csrf_token() }}",
-                    _method: 'POST',
-                    dasar_hitung: tinymce.get('tautan_dasar_hitung') ? tinymce.get('tautan_dasar_hitung').getContent() : $('#tautan_dasar_hitung').val(),
-                    link_bukti_kinerja: $('#link_bukti_kinerja').val(),
-                    link_bukti_tindak_lanjut: $('#link_bukti_tindak_lanjut').val(),
-                    penjelasan_lainnya: $('#penjelasan_lainnya').val(),
-                };
 
                 $.ajax({
                     url: `{{ url('indikator') }}/${kode}/tautan`,
                     method: 'POST',
-                    data: formData,
+                    data: $(this).serialize(),
                     success: function (response) {
                         toastr.success(response.message);
-                        $('#modalTautan').modal('hide');
-                        btn.prop('disabled', false).html('Simpan');
+                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Simpan Tautan');
                     },
                     error: function (xhr) {
-                        btn.prop('disabled', false).html('Simpan');
-                        const errors = xhr.responseJSON?.errors;
-                        if (errors) {
-                            Object.values(errors).forEach(err => toastr.error(err[0]));
-                        } else {
-                            toastr.error('Terjadi kesalahan saat menyimpan data.');
-                        }
+                        btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Simpan Tautan');
+                        toastr.error('Gagal menyimpan tautan.');
                     }
                 });
             });
 
-            // Delete Button Click (Event Delegation)
+            // Form Submit: Tambah Baru
+            $('#formTambahIndikator').on('submit', function (e) {
+                e.preventDefault();
+                const btn = $('#btnSimpanBaru');
+                btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
+
+                $.ajax({
+                    url: "{{ route('indikator.store') }}",
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        toastr.success(response.message);
+                        setTimeout(() => location.reload(), 1000);
+                    },
+                    error: function (xhr) {
+                        btn.prop('disabled', false).html('Simpan');
+                        const errors = xhr.responseJSON?.errors;
+                        if (errors) Object.values(errors).forEach(err => toastr.error(err[0]));
+                    }
+                });
+            });
+
+            // Delete Button Click
             $(document).on('click', '.delete-indikator', function () {
                 if (!confirm('Hapus indikator ini?')) return;
                 const id = $(this).data('id');
@@ -471,10 +524,7 @@
                 $.ajax({
                     url: `{{ url('indikator') }}/${kode}`,
                     method: 'POST',
-                    data: {
-                        _token: "{{ csrf_token() }}",
-                        _method: 'DELETE'
-                    },
+                    data: { _token: "{{ csrf_token() }}", _method: 'DELETE' },
                     success: function (response) {
                         toastr.success(response.message);
                         row.fadeOut(function () { $(this).remove(); });
@@ -490,9 +540,42 @@
         .table-hover tbody tr:hover {
             background-color: rgba(67, 97, 238, 0.02);
         }
+        .nav-pills .nav-link {
+            color: #6c757d;
+            border: none;
+            transition: all 0.2s;
+        }
+        .nav-pills .nav-link.active {
+            color: #fff;
+            background-color: var(--bs-primary);
+            box-shadow: 0 4px 10px rgba(67, 97, 238, 0.2);
+        }
+        .nav-pills .nav-link:not(.active):hover {
+            background-color: rgba(0,0,0,0.05);
+            color: var(--bs-primary);
+        }
+        .extra-small { font-size: 0.7rem; }
 
-        .extra-small {
-            font-size: 0.7rem;
+        #manageTabsContent {
+            max-height: 550px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #dee2e6 transparent;
+            transition: all 0.3s ease-in-out;
+        }
+
+        #manageTabsContent::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #manageTabsContent::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #manageTabsContent::-webkit-scrollbar-thumb {
+            background-color: #dee2e6;
+            border-radius: 10px;
         }
     </style>
 @endsection

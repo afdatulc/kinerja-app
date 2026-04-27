@@ -54,7 +54,21 @@
                             @endif
                         </td>
                         <td>
-                            <div class="small fw-bold text-dark"><a href="https://wa.me/62{{ $p->no_hp }}" target="_blank"><i class="fas fa-phone me-1 text-muted"></i>{{ $p->no_hp ?: '-' }}</a></div>
+                            @if($p->no_hp)
+                                @php
+                                    $waNumber = preg_replace('/[^0-9]/', '', $p->no_hp);
+                                    if (str_starts_with($waNumber, '0')) {
+                                        $waNumber = '62' . substr($waNumber, 1);
+                                    }
+                                @endphp
+                                <div class="small fw-bold text-dark">
+                                    <a href="https://wa.me/{{ $waNumber }}" target="_blank" class="text-decoration-none">
+                                        <i class="fab fa-whatsapp me-1 text-success"></i>{{ $p->no_hp }}
+                                    </a>
+                                </div>
+                            @else
+                                <span class="text-muted small">-</span>
+                            @endif
                         </td>
                         <td>
                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2 mb-1">{{ $p->seksi }}</span>
@@ -65,16 +79,19 @@
                             <div class="extra-small text-muted">{{ $p->unit_kerja ?: '-' }}</div>
                         </td>
                         <td class="text-center">
-                            <div class="d-flex justify-content-center gap-1">
+                            <div class="d-flex justify-content-center align-items-center gap-1">
                                 @if(!$p->user)
-                                    <button class="btn btn-sm btn-outline-success rounded-3 activate-pegawai" data-id="{{ $p->id }}" title="Aktifkan Akun">
+                                    <button class="btn btn-sm btn-outline-success rounded-3 activate-pegawai d-flex align-items-center justify-content-center" 
+                                        style="width: 32px; height: 32px;" data-id="{{ $p->id }}" title="Aktifkan Akun">
                                         <i class="fas fa-user-plus"></i>
                                     </button>
                                 @endif
-                                <button class="btn btn-sm btn-outline-primary rounded-3 edit-pegawai" data-id="{{ $p->id }}" title="Edit">
+                                <button class="btn btn-sm btn-outline-primary rounded-3 edit-pegawai d-flex align-items-center justify-content-center" 
+                                    style="width: 32px; height: 32px;" data-id="{{ $p->id }}" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="btn btn-sm btn-outline-danger rounded-3 delete-pegawai" data-id="{{ $p->id }}" title="Hapus">
+                                <button class="btn btn-sm btn-outline-danger rounded-3 delete-pegawai d-flex align-items-center justify-content-center" 
+                                    style="width: 32px; height: 32px;" data-id="{{ $p->id }}" title="Hapus">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
@@ -220,12 +237,23 @@
                             <div class="extra-small text-muted">${data.email_bps || '-'}</div>
                         `);
                         row.find('td:nth-child(3)').find('.fw-bold').text(data.nama);
-                        row.find('td:nth-child(4)').html(`<div class="small fw-bold text-dark"><i class="fas fa-phone me-1 text-muted"></i>${data.no_hp || '-'}</div>`);
+                        
+                        let waLink = '-';
+                        if (data.no_hp) {
+                            let waNum = data.no_hp.replace(/[^0-9]/g, '');
+                            if (waNum.startsWith('0')) waNum = '62' + waNum.substring(1);
+                            waLink = `<div class="small fw-bold text-dark">
+                                <a href="https://wa.me/${waNum}" target="_blank" class="text-decoration-none">
+                                    <i class="fab fa-whatsapp me-1 text-success"></i>${data.no_hp}
+                                </a>
+                            </div>`;
+                        }
+                        row.find('td:nth-child(4)').html(waLink);
                         row.find('td:nth-child(5)').html(`
                             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle rounded-pill px-2 mb-1">${data.seksi}</span>
                             <div class="extra-small text-muted">${data.status}</div>
                         `);
-                        row.find('td:nth-child(5)').html(`
+                        row.find('td:nth-child(6)').html(`
                             <div class="small text-dark fw-bold">${data.jabatan || '-'}</div>
                             <div class="extra-small text-muted">${data.unit_kerja || '-'}</div>
                         `);

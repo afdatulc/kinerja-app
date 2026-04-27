@@ -30,6 +30,7 @@ class PegawaiController extends Controller
             'unit_kerja' => 'nullable|string',
             'status' => 'required|in:PNS,PPPK,Outsourcing,Lainnya',
             'seksi' => 'required|in:Sosial,Produksi,Distribusi,Nerwilis,IPDS,Umum,Lainnya',
+            'no_hp' => 'nullable|string',
         ]);
 
         $pegawai = Pegawai::create($validated);
@@ -60,6 +61,7 @@ class PegawaiController extends Controller
             'unit_kerja' => 'nullable|string',
             'status' => 'required|in:PNS,PPPK,Outsourcing,Lainnya',
             'seksi' => 'required|in:Sosial,Produksi,Distribusi,Nerwilis,IPDS,Umum,Lainnya',
+            'no_hp' => 'nullable|string',
         ]);
 
         $pegawai->update($validated);
@@ -132,7 +134,7 @@ class PegawaiController extends Controller
 
     public function downloadTemplate()
     {
-        $headers = ['nip', 'nama', 'email_bps', 'jabatan', 'unit_kerja', 'status', 'seksi'];
+        $headers = ['nip', 'nama', 'email_bps', 'no_hp', 'jabatan', 'unit_kerja', 'status', 'seksi'];
         return Excel::download(new class($headers) implements \Maatwebsite\Excel\Concerns\FromArray {
             protected $headers;
             public function __construct($headers) { $this->headers = $headers; }

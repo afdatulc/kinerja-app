@@ -16,9 +16,11 @@
                 </select>
             </div>
         </form>
+        @unless(auth()->user()->isAdmin())
         <a href="{{ route('analisis.create') }}" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
             <i class="fas fa-plus me-1"></i> Input Analisis
         </a>
+        @endunless
     </div>
     <div class="card-body">
         <div class="table-responsive">
@@ -77,14 +79,16 @@
                             @endif
                         </td>
                         <td class="text-center">
-                            <div class="d-flex justify-content-center gap-1">
-                                <a href="{{ route('analisis.edit', $a->id) }}" class="btn btn-sm btn-outline-primary rounded-3">
+                            <div class="d-flex justify-content-center align-items-center gap-1">
+                                <a href="{{ route('analisis.edit', $a->id) }}" class="btn btn-sm btn-outline-primary rounded-3 d-flex align-items-center justify-content-center"
+                                    style="width: 32px; height: 32px;" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </a>
                                 <form action="{{ route('analisis.destroy', $a->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus analisis ini?')">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-3">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-3 d-flex align-items-center justify-content-center"
+                                        style="width: 32px; height: 32px;" title="Hapus">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </form>

@@ -9,8 +9,9 @@
             <div class="col-md-2">
                 <label class="form-label small fw-bold">Tahun</label>
                 <select name="tahun" class="form-select form-select-sm" onchange="this.form.submit()">
+                    <option value="">Semua Tahun</option>
                     @for($y = date('Y'); $y >= 2025; $y--)
-                        <option value="{{ $y }}" {{ $tahun == $y ? 'selected' : '' }}>{{ $y }}</option>
+                        <option value="{{ $y }}" {{ request('tahun') == $y ? 'selected' : '' }}>{{ $y }}</option>
                     @endfor
                 </select>
             </div>
@@ -40,7 +41,24 @@
 </div>
 
 @if($evidences->count() > 0)
+    @php
+        $allEvidence = [];
+        foreach($evidences as $e) {
+            foreach($e->lampiran as $idx => $l) {
+                $ext = strtolower(pathinfo($l, PATHINFO_EXTENSION));
+                $allEvidence[] = [
+                    'url' => asset('storage/' . $l),
+                    'name' => ($e->pegawai->nama ?? $e->pegawai_nip) . ' - ' . $e->indikator->kode,
+                    'ext' => $ext,
+                    'triwulan' => $e->triwulan,
+                    'tanggal' => $e->tanggal_mulai->format('d/m/Y'),
+                    'uraian' => $e->uraian
+                ];
+            }
+        }
+    @endphp
     <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4" id="evidenceGrid">
+        @php $globalIndex = 0; @endphp
         @foreach($evidences as $e)
             @foreach($e->lampiran as $l)
                 @php
@@ -51,7 +69,7 @@
                 @endphp
                 <div class="col">
                     <div class="card h-100 border-0 shadow-sm evidence-card">
-                        <div class="evidence-preview-wrapper bg-light d-flex align-items-center justify-content-center" style="height: 180px; overflow: hidden; cursor: pointer;" onclick="showPreview('{{ $url }}', '{{ $fileName }}')">
+                        <div class="evidence-preview-wrapper bg-light d-flex align-items-center justify-content-center" style="height: 180px; overflow: hidden; cursor: pointer;" onclick="showGallery({{ $globalIndex++ }}, @json($allEvidence))">
                             @if($isImage)
                                 <img src="{{ $url }}" class="img-fluid" alt="Evidence">
                             @else
@@ -91,17 +109,25 @@
     </div>
 @endif
 
-<!-- Modal Preview (Reused from Entry) -->
+<!-- Modal Preview -->
 <div class="modal fade" id="modalPreview" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
+        <div class="modal-content border-0 shadow-lg rounded-4">
             <div class="modal-header border-0 pb-0">
                 <h6 class="modal-title fw-bold" id="previewTitle">File Preview</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-4 text-center">
-                <div id="previewContent" style="min-height: 400px; display: flex; align-items: center; justify-content: center;">
-                    <!-- Content will be injected here -->
+            <div class="modal-body p-4">
+                <div id="carouselPreview" class="carousel slide" data-bs-ride="false">
+                    <div class="carousel-inner" id="previewContent">
+                        <!-- Content will be injected here -->
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#carouselPreview" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon bg-dark rounded-circle" aria-hidden="true"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#carouselPreview" data-bs-slide="next">
+                        <span class="carousel-control-next-icon bg-dark rounded-circle" aria-hidden="true"></span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -111,79 +137,78 @@
 
 @section('styles')
 <style>
-    .evidence-card {
-        transition: transform 0.2s;
-    }
-    .evidence-card:hover {
-        transform: translateY(-5px);
-    }
-    .evidence-preview-wrapper {
-        position: relative;
-    }
+    .evidence-card { transition: transform 0.2s; }
+    .evidence-card:hover { transform: translateY(-5px); }
+    .evidence-preview-wrapper { position: relative; }
     .preview-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.3);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.2s;
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.3); display: flex; align-items: center;
+        justify-content: center; opacity: 0; transition: opacity 0.2s;
     }
-    .evidence-preview-wrapper:hover .preview-overlay {
-        opacity: 1;
-    }
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-    }
-    .extra-small {
-        font-size: 0.75rem;
-    }
+    .evidence-preview-wrapper:hover .preview-overlay { opacity: 1; }
+    .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .extra-small { font-size: 0.75rem; }
+    #previewContent img { max-height: 80vh; object-fit: contain; }
+    .carousel-control-prev, .carousel-control-next { width: 5%; }
+    .carousel-item { min-height: 400px; }
 </style>
 @endsection
 
 @section('scripts')
 <script>
-    function showPreview(url, fileName) {
-        const ext = fileName.split('.').pop().toLowerCase();
+    function showGallery(startIndex, files) {
         let html = '';
         
-        $('#previewTitle').text(fileName);
-        $('#previewContent').html('<div class="spinner-border text-primary"></div>');
-        
-        if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(ext)) {
-            html = `<img src="${url}" class="img-fluid rounded shadow-sm" style="max-height: 80vh;">`;
-        } else if (ext === 'pdf') {
-            html = `<iframe src="${url}" width="100%" height="600px" style="border: none; border-radius: 8px;"></iframe>`;
-        } else {
-            html = `
-                <div class="text-center py-5">
-                    <i class="fas fa-file-alt fs-1 text-muted mb-3"></i>
-                    <p>Format file <b>.${ext}</b> tidak mendukung preview langsung.</p>
-                    <a href="${url}" target="_blank" class="btn btn-primary px-4">Download / Buka File</a>
+        files.forEach((file, index) => {
+            const isActive = index === startIndex ? 'active' : '';
+            let content = '';
+            
+            if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(file.ext)) {
+                content = `<img src="${file.url}" class="d-block mx-auto img-fluid rounded shadow-sm" alt="${file.name}">`;
+            } else if (file.ext === 'pdf') {
+                content = `<iframe src="${file.url}" width="100%" height="600px" style="border: none; border-radius: 8px;"></iframe>`;
+            } else {
+                content = `
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-alt fs-1 text-muted mb-3"></i>
+                        <p>Format file <b>.${file.ext}</b> tidak mendukung preview langsung.</p>
+                        <a href="${file.url}" target="_blank" class="btn btn-primary px-4 rounded-pill">Download / Buka File</a>
+                    </div>
+                `;
+            }
+            
+            html += `
+                <div class="carousel-item ${isActive}">
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="mb-2 badge bg-primary text-white border-0 px-3 py-2 rounded-pill">TW ${file.triwulan} | ${file.tanggal}</div>
+                        <div class="mb-3 fw-bold text-dark">${file.name}</div>
+                        <div class="mb-4 small text-muted px-5 text-center">${file.uraian}</div>
+                        ${content}
+                    </div>
                 </div>
             `;
-        }
+        });
 
-        setTimeout(() => {
-            $('#previewContent').html(html);
-        }, 300);
+        $('#previewContent').html(html);
+        
+        // Hide controls if only one file
+        if (files.length <= 1) {
+            $('.carousel-control-prev, .carousel-control-next').hide();
+        } else {
+            $('.carousel-control-prev, .carousel-control-next').show();
+        }
 
         const modal = new bootstrap.Modal(document.getElementById('modalPreview'));
         modal.show();
+        
+        // Ensure carousel starts at correct index
+        const carousel = new bootstrap.Carousel(document.getElementById('carouselPreview'));
+        carousel.to(startIndex);
     }
 
     $(document).ready(function() {
         if ($('.select2').length) {
-            $('.select2').select2({
-                theme: 'bootstrap-5'
-            });
+            $('.select2').select2({ theme: 'bootstrap-5' });
         }
     });
 </script>

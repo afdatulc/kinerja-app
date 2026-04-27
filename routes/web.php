@@ -11,12 +11,14 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\PublicInputController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [PublicInputController::class, 'index'])->name('home');
-Route::get('/api/kegiatan/{indikator_id}', [PublicInputController::class, 'getKegiatan'])->name('api.kegiatan');
-Route::post('/aktivitas', [PublicInputController::class, 'storeAktivitas'])->name('public.aktivitas.store');
-Route::post('/kendala', [PublicInputController::class, 'storeKendala'])->name('public.kendala.store');
-
 Route::middleware(['auth'])->group(function () {
+    Route::get('/', function() {
+        return redirect()->route('dashboard');
+    })->name('home');
+    Route::get('/api/kegiatan/{indikator_id}', [PublicInputController::class, 'getKegiatan'])->name('api.kegiatan');
+    Route::post('/aktivitas', [PublicInputController::class, 'storeAktivitas'])->name('public.aktivitas.store');
+    Route::post('/kendala', [PublicInputController::class, 'storeKendala'])->name('public.kendala.store');
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     Route::post('indikator/import', [IndikatorController::class, 'import'])->name('indikator.import');

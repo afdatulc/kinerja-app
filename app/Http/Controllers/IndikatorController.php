@@ -24,10 +24,9 @@ class IndikatorController extends Controller
         if (!auth()->user()->isAdmin()) {
             $pegawaiId = auth()->user()->pegawai_id;
             if ($pegawaiId) {
-                // Only show indicators assigned to this user
+                // Show indicators where user is PIC
                 $query->where('pic_id', $pegawaiId);
             } else {
-                // If user doesn't have a linked pegawai profile, show nothing
                 $query->whereRaw('1 = 0');
             }
         }
@@ -39,6 +38,10 @@ class IndikatorController extends Controller
 
     public function store(IndikatorRequest $request)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Hanya Admin yang dapat menambahkan indikator.');
+        }
+
         $indikator = Indikator::create($request->validated());
         $indikator->target()->create();
         
@@ -60,7 +63,18 @@ class IndikatorController extends Controller
 
     public function update(IndikatorRequest $request, Indikator $indikator)
     {
-        $indikator->update($request->validated());
+        $data = $request->validated();
+        $user = auth()->user();
+
+        if (!$user->isAdmin()) {
+            if ($indikator->pic_id != $user->pegawai_id) {
+                abort(403, 'Anda bukan PIC untuk indikator ini.');
+            }
+            // PIC cannot change the PIC field
+            unset($data['pic_id']);
+        }
+
+        $indikator->update($data);
 
         if ($request->ajax()) {
             return response()->json([
@@ -74,6 +88,11 @@ class IndikatorController extends Controller
 
     public function updateTautan(Request $request, Indikator $indikator)
     {
+        $user = auth()->user();
+        if (!$user->isAdmin() && $indikator->pic_id != $user->pegawai_id) {
+            abort(403);
+        }
+
         $validated = $request->validate([
             'dasar_hitung' => 'nullable|string',
             'link_bukti_kinerja' => 'nullable|string',
@@ -81,7 +100,6 @@ class IndikatorController extends Controller
             'penjelasan_lainnya' => 'nullable|string',
         ]);
 
-        // Convert empty strings to null for URL fields
         $validated['link_bukti_kinerja'] = !empty($validated['link_bukti_kinerja']) ? $validated['link_bukti_kinerja'] : null;
         $validated['link_bukti_tindak_lanjut'] = !empty($validated['link_bukti_tindak_lanjut']) ? $validated['link_bukti_tindak_lanjut'] : null;
 

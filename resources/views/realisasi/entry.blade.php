@@ -59,7 +59,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nilai Realisasi Kumulatif</label>
                         <div class="input-group">
-                            <input type="number" step="0.01" name="realisasi_kumulatif" id="inputRealisasi" class="form-control form-control-lg" required>
+                            <input type="number" step="0.01" name="realisasi_kumulatif" id="inputRealisasi" class="form-control form-control-lg" required {{ !$isPIC ? 'disabled' : '' }}>
                             <span class="input-group-text">{{ $indikator->satuan }}</span>
                         </div>
                         <div class="form-text text-info" id="prevInfo">Realisasi sebelumnya: <span id="prevValue">0</span></div>
@@ -75,9 +75,15 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100 py-2">
-                        <i class="fas fa-save me-1"></i> Simpan Realisasi & Output
-                    </button>
+                    @if($isPIC)
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-save me-1"></i> Simpan Realisasi & Output
+                        </button>
+                    @else
+                        <div class="alert alert-warning border-0 small text-center rounded-3">
+                            <i class="fas fa-lock me-1"></i> Mode Lihat Saja (Hanya PIC/Admin yang dapat mengubah data)
+                        </div>
+                    @endif
                     <a href="{{ route('rekap.capaian') }}" class="btn btn-link w-100 text-muted mt-2">Batal</a>
                 </form>
             </div>
@@ -86,23 +92,37 @@
 
     <div class="col-md-7">
         <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="text-muted small fw-bold text-uppercase mb-0">Contextual Evidence (Aktivitas Pegawai)</h6>
-                    <p class="text-muted extra-small mb-0">Berikut adalah laporan aktivitas yang masuk untuk Triwulan ini.</p>
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <div class="bg-light p-1 rounded-4 d-flex">
+                    <ul class="nav nav-pills nav-fill w-100" id="contextTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active fw-bold small py-2 rounded-3" id="kendala-tab" data-bs-toggle="tab" data-bs-target="#kendala-pane" type="button" role="tab">
+                                <i class="fas fa-exclamation-triangle me-1"></i> Hambatan dan Kendala
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link fw-bold small py-2 rounded-3" id="aktivitas-tab" data-bs-toggle="tab" data-bs-target="#aktivitas-pane" type="button" role="tab">
+                                <i class="fas fa-tasks me-1"></i> Aktivitas Pegawai
+                            </button>
+                        </li>
+                    </ul>
                 </div>
             </div>
-            <div class="card-body p-4" id="activityContainer">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+            <div class="card-body p-4 pt-0">
+                <div class="tab-content" id="contextTabsContent">
+                    <div class="tab-pane fade show active py-3" id="kendala-pane" role="tabpanel">
+                        <div id="kendalaContainer">
+                            <div class="text-center py-4 opacity-50 small italic text-muted">Memuat data kendala...</div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade py-3" id="aktivitas-pane" role="tabpanel">
+                        <div id="activityContainer">
+                            <div class="text-center py-4 opacity-50 small italic text-muted">Memuat data aktivitas...</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
     </div>
 </div>
 
@@ -129,6 +149,8 @@
 
 @section('scripts')
 <script>
+    const isPIC = {{ $isPIC ? 'true' : 'false' }};
+
     function showPreview(url, fileName) {
         const ext = fileName.split('.').pop().toLowerCase();
         let html = '';
@@ -163,32 +185,52 @@
         $('#twLabel').text(['', 'I', 'II', 'III', 'IV'][triwulan]);
         
         $('#activityContainer').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>');
-
         $.get(`{{ url('api/realisasi/context/' . $indikator->kode) }}/${triwulan}`, function(data) {
             $('#targetValue').text(data.target);
             $('#prevValue').text(data.previous_value);
             $('#inputRealisasi').val(data.current_value);
 
-            let html = '';
-            if (data.aktivitas.length === 0) {
-                html = `
-                    <div class="text-center py-5 opacity-50">
-                        <i class="fas fa-folder-open fs-1 mb-3"></i>
-                        <p>Belum ada aktivitas yang dicatat untuk triwulan ini.</p>
-                    </div>
-                `;
+            // Reset Containers
+            $('#kendalaContainer').empty();
+            $('#activityContainer').empty();
+
+            // Render Kendala
+            if (data.analisis.length === 0) {
+                $('#kendalaContainer').html('<div class="text-center py-4 opacity-50 small italic">Tidak ada kendala yang dilaporkan.</div>');
             } else {
+                let kendalaHtml = '';
+                data.analisis.forEach(an => {
+                    const sevClass = an.severity === 'High' ? 'danger' : (an.severity === 'Medium' ? 'warning' : 'info');
+                    kendalaHtml += `
+                        <div class="mb-3 pb-3 border-bottom last-child-no-border" style="border-left: 4px solid var(--bs-${sevClass}); padding-left: 15px;">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <div class="fw-bold extra-small text-dark">${an.pegawai} <span class="badge bg-${sevClass} text-white ms-1" style="font-size: 0.55rem;">${an.severity} Issue</span></div>
+                                <span class="badge bg-light text-muted fw-normal border extra-small px-2 py-1">${an.tanggal}</span>
+                            </div>
+                            <div class="text-dark small mb-2 lh-base fw-bold">${an.kendala}</div>
+                            ${an.solusi ? `<div class="bg-light p-2 rounded extra-small mt-2 border-start border-warning border-3"><i class="fas fa-lightbulb text-warning me-1"></i> <b>Solusi/Saran:</b> ${an.solusi}</div>` : ''}
+                        </div>
+                    `;
+                });
+                $('#kendalaContainer').html(kendalaHtml);
+            }
+
+            // Render Aktivitas
+            if (data.aktivitas.length === 0) {
+                $('#activityContainer').html('<div class="text-center py-4 opacity-50 small italic">Belum ada aktivitas yang dicatat.</div>');
+            } else {
+                let aktivitasHtml = '';
                 data.aktivitas.forEach(a => {
                     let lampiranHtml = '';
                     if (a.lampirans && a.lampirans.length > 0) {
                         a.lampirans.forEach(l => {
                             const url = `{{ asset('storage') }}/${l}`;
                             const fileName = l.split('/').pop();
-                            lampiranHtml += `<button type="button" onclick="showPreview('${url}', '${fileName}')" class="btn btn-light btn-sm border me-1 mt-1"><i class="fas fa-eye me-1"></i> Preview</button>`;
+                            lampiranHtml += `<button type="button" onclick="showPreview('${url}', '${fileName}')" class="btn btn-light btn-sm border extra-small me-1 mt-1 px-2 py-0"><i class="fas fa-eye me-1"></i> Preview</button>`;
                         });
                     }
 
-                    html += `
+                    aktivitasHtml += `
                         <div class="mb-4 pb-4 border-bottom last-child-no-border">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <div class="fw-bold fs-6 text-dark">${a.pegawai}</div>
@@ -200,8 +242,8 @@
                         </div>
                     `;
                 });
+                $('#activityContainer').html(aktivitasHtml);
             }
-            $('#activityContainer').html(html);
 
             // Handle Outputs
             if (data.outputs && data.outputs.length > 0) {
@@ -213,7 +255,7 @@
                         <div class="mb-3 pb-3 border-bottom last-child-no-border">
                             <div class="form-check mb-2">
                                 <input class="form-check-input output-checkbox" type="checkbox" 
-                                    id="output-${o.id}" data-id="${o.id}" ${o.is_achieved ? 'checked' : ''}>
+                                    id="output-${o.id}" data-id="${o.id}" ${o.is_achieved ? 'checked' : ''} ${!isPIC ? 'disabled' : ''}>
                                 <label class="form-check-label text-dark fw-bold small" for="output-${o.id}">
                                     ${o.nama_output} <span class="text-muted extra-small fw-normal">(${o.jenis_output})</span>
                                 </label>
@@ -223,20 +265,22 @@
                                 <div class="col-6">
                                     <label class="extra-small text-muted mb-1">Volume Capaian</label>
                                     <input type="number" step="0.01" name="output_data[${o.id}][volume]" 
-                                        class="form-control form-control-sm" value="${o.volume || ''}" placeholder="0">
+                                        class="form-control form-control-sm" value="${o.volume || ''}" placeholder="0" ${!isPIC ? 'disabled' : ''}>
                                 </div>
                                 <div class="col-6">
                                     <label class="extra-small text-muted mb-1">Progres (%)</label>
                                     <input type="number" step="0.01" name="output_data[${o.id}][progres]" 
-                                        class="form-control form-control-sm" value="${o.progres || ''}" placeholder="0">
+                                        class="form-control form-control-sm" value="${o.progres || ''}" placeholder="0" ${!isPIC ? 'disabled' : ''}>
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-center gap-2 ps-4">
+                                ${isPIC ? `
                                 <button type="button" class="btn btn-sm btn-outline-secondary border-dashed upload-trigger" data-id="${o.id}">
                                     <i class="fas ${hasFile ? 'fa-sync' : 'fa-upload'} me-1"></i> 
                                     ${hasFile ? 'Perbarui' : 'Unggah'}
                                 </button>
+                                ` : ''}
                                 
                                 <span class="text-muted extra-small">
                                     <span id="file-info-${o.id}">
@@ -340,6 +384,20 @@
     }
     .extra-small {
         font-size: 0.75rem;
+    }
+    .nav-pills .nav-link {
+        color: #6c757d;
+        border: none;
+        transition: all 0.2s;
+    }
+    .nav-pills .nav-link.active {
+        color: #fff;
+        background-color: var(--bs-primary);
+        box-shadow: 0 4px 10px rgba(67, 97, 238, 0.2);
+    }
+    .nav-pills .nav-link:not(.active):hover {
+        background-color: rgba(0,0,0,0.05);
+        color: var(--bs-primary);
     }
 </style>
 @endsection

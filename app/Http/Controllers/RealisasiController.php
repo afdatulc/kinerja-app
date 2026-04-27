@@ -19,7 +19,9 @@ class RealisasiController extends Controller
 
     public function entry(Indikator $indikator)
     {
-        return view('realisasi.entry', compact('indikator'));
+        $user = auth()->user();
+        $isPIC = $user->isAdmin() || ($user->pegawai_id && $indikator->pic_id == $user->pegawai_id);
+        return view('realisasi.entry', compact('indikator', 'isPIC'));
     }
 
     public function getContext(Indikator $indikator, $triwulan)
@@ -52,6 +54,21 @@ class RealisasiController extends Controller
             ];
         });
 
+        $analisis = $indikator->analisis()
+            ->where('triwulan', $triwulan)
+            ->get();
+
+        $analisisFormatted = $analisis->map(function($a) {
+            $pegawai = \App\Models\Pegawai::where('nip', $a->pegawai_nip)->first();
+            return [
+                'pegawai' => $pegawai ? $pegawai->nama : $a->pegawai_nip,
+                'kendala' => $a->kendala,
+                'solusi' => $a->solusi,
+                'severity' => $a->severity,
+                'tanggal' => $a->created_at->format('Y-m-d'),
+            ];
+        });
+
         $outputs = $indikator->outputMasters()->with(['outputRealisasis' => function($q) use ($triwulan) {
             $q->where('triwulan', $triwulan);
         }])->get();
@@ -61,6 +78,7 @@ class RealisasiController extends Controller
             'previous_value' => $previousRealisasi ? $previousRealisasi->realisasi_kumulatif : 0,
             'current_value' => $currentRealisasi ? $currentRealisasi->realisasi_kumulatif : null,
             'aktivitas' => $aktivitasFormatted,
+            'analisis' => $analisisFormatted,
             'outputs' => $outputs->map(function($o) {
                 $realisasi = $o->outputRealisasis->first();
                 return [
@@ -78,6 +96,13 @@ class RealisasiController extends Controller
 
     public function store(Request $request)
     {
+        $user = auth()->user();
+        $indikator = Indikator::findOrFail($request->indikator_id);
+
+        if (!$user->isAdmin() && $indikator->pic_id != $user->pegawai_id) {
+            abort(403, 'Anda bukan PIC untuk indikator ini.');
+        }
+
         $validated = $request->validate([
             'indikator_id' => 'required|exists:indikators,id',
             'triwulan' => 'required|integer|between:1,4',
